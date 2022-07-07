@@ -4,24 +4,36 @@ import torchvision
 import torchvision.transforms as transforms
 import numpy as np
 
-def load_dataset(batch_size=64):
+def load_dataset(batch_size=64, dataset='mnist'):
 
     # transforms.ToTensor() 只是将数据归一化到 [0, 1]
     # transforms.Normalize() 则是将数据归一化到 [-1, 1]
-    trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+    if dataset == 'mnist':
+        trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+        
+        data_train = torchvision.datasets.MNIST(root='data/MNIST', 
+                                                train=True, download=True, 
+                                                transform=trans)
+        data_test = torchvision.datasets.MNIST(root='data/MNIST', 
+                                                train=False, download=True, 
+                                                transform=trans)
+    elif dataset == 'cifar':
+        std = [0.2023, 0.1994, 0.2010]
+        mean = [0.4914, 0.4822, 0.4465]
+        trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize(mean = mean, std = std)])
+        
+        data_train = torchvision.datasets.CIFAR10(root='data/CIFAR10', 
+                                                train=True, download=True, 
+                                                transform=trans)
+        data_test = torchvision.datasets.CIFAR10(root='data/CIFAR10', 
+                                                train=False, download=True, 
+                                                transform=trans)
     
-    mnist_train = torchvision.datasets.MNIST(root='data/MNIST', 
-                                             train=True, download=True, 
-                                             transform=trans)
-    mnist_test = torchvision.datasets.MNIST(root='data/MNIST', 
-                                            train=False, download=True, 
-                                            transform=trans)
-    
-    train_iter = torch.utils.data.DataLoader(mnist_train,
+    train_iter = torch.utils.data.DataLoader(data_train,
                                              batch_size=batch_size,
                                              shuffle=True,
                                              num_workers= 1) # num_workers 工作者数量，默认是0。使用多少个子进程来导入数据。设置为0，就是使用主进程来导入数据
-    test_iter = torch.utils.data.DataLoader(mnist_test,
+    test_iter = torch.utils.data.DataLoader(data_test,
                                             batch_size=batch_size,
                                             shuffle=True,
                                             num_workers=1)
@@ -40,6 +52,7 @@ def abstract_data(x, interval_num):
     x_result = torch.cat((x_upper, x_lower), dim=1)
     return x_result
 
+# 如何将扰动区间映射到抽象区间
 def abstract_disturbed_data(x, interval_num, epsilon, y):
 
     # 比如 x = 0.425, eps = 0.4, 则 x' 属于 [0.025, 0.825]

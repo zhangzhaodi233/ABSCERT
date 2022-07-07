@@ -11,6 +11,7 @@ import os
 
 from my_models_define import *
 from my_datasets import load_dataset, abstract_data, abstract_disturbed_data
+import time
 
 tf.io.gfile = tb.compat.tensorflow_stub.io.gfile
 
@@ -32,7 +33,7 @@ class RobustModel:
         self.epsilon = epsilon
 
     def train(self):
-        train_iter, test_iter = load_dataset(self.batch_size)
+        train_iter, test_iter = load_dataset(self.batch_size, self.dataset)
         last_epoch = -1
         # 接着之前的模型继续训练
         # if os.path.exists('exp_results/lenet5_test.pt'):
@@ -51,11 +52,15 @@ class RobustModel:
         writer = SummaryWriter(self.log_path)
         self.model = self.model.to(self.device)
         max_test_acc = 0
+        time_sum = 0
         for epoch in range(self.epochs):
+            start = time.time()
             for i, (x, y) in enumerate(train_iter):
                 if self.fnn:
                     if self.dataset == 'mnist':
                         x = x.view(-1, 784)
+                    elif self.dataset == 'cifar':
+                        x = x.view(-1, 3*32*32)
                 
                 x, y = abstract_disturbed_data(x, self.interval_num, self.epsilon, y)
                 # x = abstract_data(x, self.interval_num)
@@ -72,6 +77,8 @@ class RobustModel:
                 writer.add_scalar('Training/Loss', loss.item(), scheduler.last_epoch)
                 writer.add_scalar('Training/Learning Rate', scheduler.get_last_lr()[0], scheduler.last_epoch)
 
+            time_sum += time.time() - start
+            
             test_acc, all_logits, y_labels, label_img = self.evaluate(test_iter)
             print("### Epochs [{}/{}] -- Acc on test {:.4}".format(epoch + 1, self.epochs, test_acc))
             writer.add_scalar('Testing/Accuracy', test_acc, scheduler.last_epoch)
@@ -92,6 +99,7 @@ class RobustModel:
                         'model_state_dict': state_dict},
                         self.model_save_path)
     
+        print("### time of per epoch: {:.4}".format(time_sum / epoch))
     def evaluate(self, data_iter):
         self.model.eval()
         all_logits = []
@@ -104,6 +112,8 @@ class RobustModel:
                 if self.fnn:
                     if self.dataset == 'mnist':
                         x_fnn = x.view(-1, 784)
+                    elif self.dataset == 'cifar':
+                        x_fnn = x.view(-1, 3*32*32)
                     x_abstract = abstract_data(x_fnn, self.interval_num)
                 else:
                     x_abstract = abstract_data(x, self.interval_num)
@@ -133,6 +143,8 @@ class RobustModel:
                 if self.fnn:
                     if self.dataset == 'mnist':
                         x_fnn = x.view(-1, 784)
+                    elif self.dataset == 'cifar':
+                        x_fnn = x.view(-1, 3*32*32)
                     x_disturbed_abstract, y = abstract_disturbed_data(x_fnn, self.interval_num, self.epsilon, y)
                 else:
                     x_disturbed_abstract, y = abstract_disturbed_data(x, self.interval_num, self.epsilon, y)
@@ -153,32 +165,42 @@ class RobustModel:
 
 if __name__ == '__main__':
 
-    ######## 训练 ########
-    # 1. 根据抽象粒度，将输入映射到区间
-    # 2. 将区间映射到输入层
-    # 3. 训练得到 clean accuracy
+    # ######## 训练 ########
+    # # 1. 根据抽象粒度，将输入映射到区间
+    # # 2. 将区间映射到输入层
+    # # 3. 训练得到 clean accuracy
+    # model_path_pre = 'exp_results/'
+    # model_name = 'DM_Small_MNIST_robust'
+    # log_path_pre = 'runs/'
+    # model_path = model_path_pre + model_name
+    # log_path = log_path_pre + model_name
+
+    # in_ch = 1*2
+    # in_dim= 28
+    # width = 4
+    # model_struc = DM_Small(in_ch, in_dim, width)
+    # interval_num = 10
+    # epsilon = 0.1
+
+    
+    # model = RobustModel(model_path, log_path, model_struc, dataset='mnist', interval_num=interval_num, epsilon=epsilon)
+    # model.train()
+    
     model_path_pre = 'exp_results/'
-    model_name = 'DM_Small_MNIST'
+    model_name = 'DM_Small_CIFAR10_robust'
     log_path_pre = 'runs/'
     model_path = model_path_pre + model_name
     log_path = log_path_pre + model_name
 
-    in_ch = 1*2
-    in_dim= 28
+    in_ch = 3*2
+    in_dim= 32
     width = 4
     model_struc = DM_Small(in_ch, in_dim, width)
     interval_num = 10
     epsilon = 0.1
 
     
-    model = RobustModel(model_path, log_path, model_struc, dataset='mnist', interval_num=interval_num, epsilon=epsilon)
+    model = RobustModel(model_path, log_path, model_struc, dataset='cifar', interval_num=interval_num, epsilon=epsilon)
     model.train()
 
-    ######## 验证 ########
-    # 4. 测试集+epsilon 作为网络的输入进行 evaluate，得到 robust accuracy
-    # 5. 如果 robust accuray 到达阈值，则结束训练；否则进行精华
-
-
-
-    ######## 精华 ########
-    # 6. 精华 - 划分抽象区间 - 再回到第一步
+    
