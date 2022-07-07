@@ -33,7 +33,7 @@ def abstract_data(x, interval_num):
     x_lower = torch.zeros_like(x)
 
     step = (1-(-1))/interval_num
-    k = (x - (-1)) // step
+    k = torch.div((x - (-1)), step, rounding_mode='floor')
     x_lower = -1 + k * step
     x_upper = x_lower + step
 
@@ -51,7 +51,7 @@ def abstract_disturbed_data(x, interval_num, epsilon, y):
     x_lower = x - epsilon
     
     step = (1-(-1))/interval_num
-    k = (x_lower - (-1)) // step
+    k = torch.div((x_lower - (-1)), step, rounding_mode='floor')
     x_lower_abstract_lower = -1 + k * step
     x_lower_abstract_upper = x_lower_abstract_lower + step
 
@@ -60,7 +60,7 @@ def abstract_disturbed_data(x, interval_num, epsilon, y):
     # 计算扰动之后上界的抽象区间
     x_upper = x + epsilon
     
-    k = (x_upper - (-1)) // step
+    k = torch.div((x_upper - (-1)), step, rounding_mode='floor')
     x_upper_abstract_lower = -1 + k * step
     x_upper_abstract_upper = x_upper_abstract_lower + step
 
