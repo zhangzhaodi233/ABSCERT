@@ -9,7 +9,7 @@ import tensorboard as tb
 
 import os
 
-from my_models_define import LeNet5, mlp_4_layer, IBP_2_layer, mlp_4_layer_robust
+from my_models_define import *
 from my_datasets import load_dataset, abstract_data, abstract_disturbed_data
 
 tf.io.gfile = tb.compat.tensorflow_stub.io.gfile
@@ -56,8 +56,9 @@ class RobustModel:
                 if self.fnn:
                     if self.dataset == 'mnist':
                         x = x.view(-1, 784)
-                x = abstract_data(x, self.interval_num)
-
+                
+                x, y = abstract_disturbed_data(x, self.interval_num, self.epsilon, y)
+                # x = abstract_data(x, self.interval_num)
                 x, y = x.to(self.device), y.to(self.device)
                 loss, logits = self.model(x, y)
                 optimizer.zero_grad()
@@ -103,8 +104,10 @@ class RobustModel:
                 if self.fnn:
                     if self.dataset == 'mnist':
                         x_fnn = x.view(-1, 784)
-
-                x_abstract = abstract_data(x_fnn, self.interval_num)
+                    x_abstract = abstract_data(x_fnn, self.interval_num)
+                else:
+                    x_abstract = abstract_data(x, self.interval_num)
+                    
                 x_abstract, y = x_abstract.to(self.device), y.to(self.device)
                 logits = self.model(x_abstract)
             
@@ -130,8 +133,10 @@ class RobustModel:
                 if self.fnn:
                     if self.dataset == 'mnist':
                         x_fnn = x.view(-1, 784)
-
-                x_disturbed_abstract, y = abstract_disturbed_data(x_fnn, self.interval_num, self.epsilon, y)
+                    x_disturbed_abstract, y = abstract_disturbed_data(x_fnn, self.interval_num, self.epsilon, y)
+                else:
+                    x_disturbed_abstract, y = abstract_disturbed_data(x, self.interval_num, self.epsilon, y)
+          
                 x_disturbed_abstract, y = x_disturbed_abstract.to(self.device), y.to(self.device)
                 logits = self.model(x_disturbed_abstract)
                 
@@ -153,17 +158,20 @@ if __name__ == '__main__':
     # 2. 将区间映射到输入层
     # 3. 训练得到 clean accuracy
     model_path_pre = 'exp_results/'
-    model_name = 'DM_Small_MNIST_robust'
+    model_name = 'DM_Small_MNIST'
     log_path_pre = 'runs/'
     model_path = model_path_pre + model_name
     log_path = log_path_pre + model_name
 
-    model_struc = mlp_4_layer_robust()
-    interval_num = 40
-    epsilon = 0.04
+    in_ch = 1*2
+    in_dim= 28
+    width = 4
+    model_struc = DM_Small(in_ch, in_dim, width)
+    interval_num = 10
+    epsilon = 0.1
 
     
-    model = RobustModel(model_path, log_path, model_struc, dataset='mnist', fnn=True, interval_num=interval_num, epsilon=epsilon)
+    model = RobustModel(model_path, log_path, model_struc, dataset='mnist', interval_num=interval_num, epsilon=epsilon)
     model.train()
 
     ######## 验证 ########

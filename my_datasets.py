@@ -4,7 +4,7 @@ import torchvision
 import torchvision.transforms as transforms
 import numpy as np
 
-def load_dataset(batch_size=64, abstra_param=0.05):
+def load_dataset(batch_size=64):
 
     # transforms.ToTensor() 只是将数据归一化到 [0, 1]
     # transforms.Normalize() 则是将数据归一化到 [-1, 1]

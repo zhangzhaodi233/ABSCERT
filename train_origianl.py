@@ -109,8 +109,8 @@ if __name__ == '__main__':
     in_ch = 1
     in_dim= 28
     width = 4
-    model_str = DM_Small(in_ch, in_dim, width)
-    model = OriginalModel(model_path_pre + model_name, log_path_pre + model_name, model_str, fnn=True)
+    model_struc = DM_Small(in_ch, in_dim, width)
+    model = OriginalModel(model_path_pre + model_name, log_path_pre + model_name, model_struc, fnn=True)
     model.train()
     
 
