@@ -153,7 +153,7 @@ if __name__ == '__main__':
     # 2. 将区间映射到输入层
     # 3. 训练得到 clean accuracy
     model_path_pre = 'exp_results/'
-    model_name = 'mlp_4layer_robust'
+    model_name = 'DM_Small_MNIST_robust'
     log_path_pre = 'runs/'
     model_path = model_path_pre + model_name
     log_path = log_path_pre + model_name

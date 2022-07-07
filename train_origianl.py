@@ -9,7 +9,7 @@ import tensorboard as tb
 
 import os
 
-from my_models_define import LeNet5, mlp_4_layer, IBP_2_layer, mlp_4_layer_robust
+from my_models_define import *
 from my_datasets import load_dataset, abstract_data
 
 tf.io.gfile = tb.compat.tensorflow_stub.io.gfile
@@ -102,10 +102,16 @@ class OriginalModel:
 if __name__ == '__main__':
     # 原始训练 
     model_path_pre = 'exp_results/'
-    model_name = 'mlp_4layer_original'
+    model_name = 'DM_Small_MNIST_original'
     log_path_pre = 'runs/'
-    model_str = mlp_4_layer()
+    
+    # MNIST
+    in_ch = 1
+    in_dim= 28
+    width = 4
+    model_str = DM_Small(in_ch, in_dim, width)
     model = OriginalModel(model_path_pre + model_name, log_path_pre + model_name, model_str, fnn=True)
     model.train()
+    
 
     

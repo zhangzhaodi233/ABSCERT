@@ -107,3 +107,97 @@ class mlp_4_layer_robust(nn.Module):
             return loss, logits
         else:
             return logits
+        
+class DM_Small(nn.Module):
+    def __init__(self, in_ch, in_dim, width, linear_size=100):
+        super(DM_Small, self).__init__()
+        self.conv = nn.Sequential(  # [n, in_ch, in_dim, in_dim]
+            nn.Conv2d(in_ch, 4*width, 4, stride=2, padding=2), # in_channels, out_channels, kernel_size
+            nn.ReLU(),  # [4*width, ((in_dim-kernel_size+2*padding) // stride) + 1, ((in_dim-kernel_size+2*padding) // stride) + 1]                  
+            nn.Conv2d(4*width, 8*width, 4, stride=1, padding=2),        
+            nn.ReLU(),
+        )
+
+        self.fc = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(8*width*(in_dim // 2+2)*(in_dim // 2+2),linear_size),
+            nn.ReLU(),
+            nn.Linear(linear_size, 10)
+        )
+    
+    def forward(self, img, labels=None):
+        output = self.conv(img)
+        logits = self.fc(output)
+        if labels is not None:
+            loss_fct = nn.CrossEntropyLoss(reduction='mean')
+            loss = loss_fct(logits, labels)
+            return loss, logits
+        else:
+            return logits
+
+class DM_Medium(nn.Module):
+    def __init__(self, in_ch, in_dim, width, linear_size=512):
+        super(DM_Medium, self).__init__()
+        self.conv = nn.Sequential(  # [n, in_ch, in_dim, in_dim]
+            nn.Conv2d(in_ch, 4*width, 3, stride=1, padding=1), # in_channels, out_channels, kernel_size
+            nn.ReLU(),                    
+            nn.Conv2d(4*width, 4*width, 4, stride=2, padding=2),        
+            nn.ReLU(),
+            nn.Conv2d(4*width, 8*width, 3, stride=1, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(8*width, 8*width, 4, stride=2, padding=2),
+            nn.ReLU(),
+        )
+
+        self.fc = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(8*width*(in_dim // 4+1)*(in_dim // 4+1), linear_size),
+            nn.ReLU(),
+            nn.Linear(linear_size, linear_size),
+            nn.ReLU(),
+            nn.Linear(linear_size, 10)
+        )
+    
+    def forward(self, img, labels=None):
+        output = self.conv(img)
+        logits = self.fc(output)
+        if labels is not None:
+            loss_fct = nn.CrossEntropyLoss(reduction='mean')
+            loss = loss_fct(logits, labels)
+            return loss, logits
+        else:
+            return logits
+        
+class DM_Large(nn.Module):
+    def __init__(self, in_ch, in_dim, linear_size=512):
+        super(DM_Large, self).__init__()
+        self.conv = nn.Sequential(  # [n, in_ch, in_dim, in_dim]
+            nn.Conv2d(in_ch, 64, 3, stride=1, padding=1), # in_channels, out_channels, kernel_size
+            nn.ReLU(),                    
+            nn.Conv2d(64, 64, 3, stride=1, padding=1),        
+            nn.ReLU(),
+            nn.Conv2d(64, 128, 3, stride=2, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(128, 128, 3, stride=1, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(128, 128, 3, stride=1, padding=1),
+            nn.ReLU(),
+        )
+
+        self.fc = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear((in_dim//2) * (in_dim//2) * 128, linear_size),
+            nn.ReLU(),
+            nn.Linear(linear_size, 10)
+        )
+    
+    def forward(self, img, labels=None):
+        output = self.conv(img)
+        logits = self.fc(output)
+        if labels is not None:
+            loss_fct = nn.CrossEntropyLoss(reduction='mean')
+            loss = loss_fct(logits, labels)
+            return loss, logits
+        else:
+            return logits
+        
