@@ -62,8 +62,7 @@ class RobustModel:
                     elif self.dataset == 'cifar':
                         x = x.view(-1, 3*32*32)
                 
-                x, y = abstract_disturbed_data(x, self.interval_num, self.epsilon, y)
-                # x = abstract_data(x, self.interval_num)
+                x = abstract_disturbed_data(x, self.interval_num, self.epsilon)
                 x, y = x.to(self.device), y.to(self.device)
                 loss, logits = self.model(x, y)
                 optimizer.zero_grad()
@@ -145,9 +144,9 @@ class RobustModel:
                         x_fnn = x.view(-1, 784)
                     elif self.dataset == 'cifar':
                         x_fnn = x.view(-1, 3*32*32)
-                    x_disturbed_abstract, y = abstract_disturbed_data(x_fnn, self.interval_num, self.epsilon, y)
+                    x_disturbed_abstract = abstract_disturbed_data(x_fnn, self.interval_num, self.epsilon)
                 else:
-                    x_disturbed_abstract, y = abstract_disturbed_data(x, self.interval_num, self.epsilon, y)
+                    x_disturbed_abstract = abstract_disturbed_data(x, self.interval_num, self.epsilon)
           
                 x_disturbed_abstract, y = x_disturbed_abstract.to(self.device), y.to(self.device)
                 logits = self.model(x_disturbed_abstract)

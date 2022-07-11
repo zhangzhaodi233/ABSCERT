@@ -53,34 +53,28 @@ def abstract_data(x, interval_num):
     return x_result
 
 # 如何将扰动区间映射到抽象区间
-def abstract_disturbed_data(x, interval_num, epsilon, y):
+def abstract_disturbed_data(x, interval_num, epsilon):
 
-    # 比如 x = 0.425, eps = 0.4, 则 x' 属于 [0.025, 0.825]
-    # 其实并不需要考虑划分区间，只需要分别计算 0.025 和 0.825 的抽象区间即可
-    # 相当于一张图片变成了两张图片进行验证
-    # 暂时只考虑扰动后的区间只会跨两个抽象区间（如果是跨三个抽象区间，其实就是将图片根据跨的分界点变成三张图片进行验证）
+    # 比如 x = (-0.55, 0.55), eps = 0.1, 则 x 的扰动区间为 ([-0.65, -0.45][0.45, 0.65])
+    # 那么每个像素的扰动区间分别映射为 [-1, -0.5], [-0.5, 0] 和 [0, 0.5], [0.5, 1]
+    # 这时，将每个像素的抽象子区间进行合并，合并为 [-1, 0] 和 [0, 1]
+    # 这样既解决了空间爆炸问题，验证的时候又包含了所有情况。只不过可能对分类精确度和鲁棒精确度有所影响，后期根据实验结果再进行调整。
 
     # 计算被扰动之后下界的抽象区间
     x_lower = x - epsilon
     
     step = (1-(-1))/interval_num
     k = torch.div((x_lower - (-1)), step, rounding_mode='floor')
-    x_lower_abstract_lower = -1 + k * step
-    x_lower_abstract_upper = x_lower_abstract_lower + step
-
-    x_lower_abstract = torch.cat((x_lower_abstract_upper, x_lower_abstract_lower), dim=1)
+    x_lower_abstract_lower = -1 + k * step 
 
     # 计算扰动之后上界的抽象区间
     x_upper = x + epsilon
     
     k = torch.div((x_upper - (-1)), step, rounding_mode='floor')
     x_upper_abstract_lower = -1 + k * step
-    x_upper_abstract_upper = x_upper_abstract_lower + step
+    x_upper_abstract_upper = x_upper_abstract_lower + step 
 
-    x_upper_abstract = torch.cat((x_upper_abstract_upper, x_upper_abstract_lower), dim=1)
+    # 取扰动区间下界的抽象区间的下界，取扰动区间上界的抽象区间的上界
+    x_result = torch.cat((x_lower_abstract_lower, x_upper_abstract_upper), dim=1)
 
-    x_result = torch.cat((x_upper_abstract, x_lower_abstract), dim=0)
-
-    y_result = torch.cat((y, y), dim=0)
-
-    return x_result, y_result
+    return x_result
