@@ -10,13 +10,14 @@ import tensorboard as tb
 import os
 
 from my_models_define import *
+from utils import * 
 from my_datasets import load_dataset, abstract_data, abstract_disturbed_data
 import time
 
 tf.io.gfile = tb.compat.tensorflow_stub.io.gfile
 
-text_labels = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-
+mnist_text_labels = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+cifar_text_labels = ['Airplane', "Automobile", "Bird", "Cat", "Deer", "Dog", "Frog", "Horse", "Ship", "Truck"]
 
 class RobustModel:
     def __init__(self, model_path, log_path, model, dataset, fnn=False, interval_num=1, epsilon=0, batch_size=256, epochs=10, learning_rate=0.01):
@@ -125,7 +126,10 @@ class RobustModel:
 
                 all_logits.append(logits)
                 y_pred = logits.argmax(1).view(-1)
-                y_labels += (text_labels[i] for i in y_pred)
+                if self.dataset == 'mnist':
+                    y_labels += (mnist_text_labels[i] for i in y_pred)
+                elif self.dataset == 'cifar':
+                    y_labels += (cifar_text_labels[i] for i in y_pred)
                 images.append(x)
             self.model.train()
             return acc_sum / n, torch.cat(all_logits, dim=0), y_labels, torch.cat(images, dim=0)
@@ -156,7 +160,10 @@ class RobustModel:
 
                 all_logits.append(logits)
                 y_pred = logits.argmax(1).view(-1)
-                y_labels += (text_labels[i] for i in y_pred)
+                if self.dataset == 'mnist':
+                    y_labels += (mnist_text_labels[i] for i in y_pred)
+                elif self.dataset == 'cifar':
+                    y_labels += (cifar_text_labels[i] for i in y_pred)
                 images.append(x)
             self.model.train()
             return acc_sum / n, torch.cat(all_logits, dim=0), y_labels, torch.cat(images, dim=0)
@@ -164,42 +171,41 @@ class RobustModel:
 
 if __name__ == '__main__':
 
-    # ######## 训练 ########
-    # # 1. 根据抽象粒度，将输入映射到区间
-    # # 2. 将区间映射到输入层
-    # # 3. 训练得到 clean accuracy
-    # model_path_pre = 'exp_results/'
-    # model_name = 'DM_Small_MNIST_robust'
-    # log_path_pre = 'runs/'
-    # model_path = model_path_pre + model_name
-    # log_path = log_path_pre + model_name
-
-    # in_ch = 1*2
-    # in_dim= 28
-    # width = 4
-    # model_struc = DM_Small(in_ch, in_dim, width)
-    # interval_num = 10
-    # epsilon = 0.1
-
+    args = get_parameters()
     
-    # model = RobustModel(model_path, log_path, model_struc, dataset='mnist', interval_num=interval_num, epsilon=epsilon)
-    # model.train()
+    # parameters of dataset
+    dataset = args.dataset
+    in_ch = args.in_ch * 2
+    in_dim = args.in_dim
     
-    model_path_pre = 'exp_results/'
-    model_name = 'DM_Small_CIFAR10_robust'
-    log_path_pre = 'runs/'
-    model_path = model_path_pre + model_name
-    log_path = log_path_pre + model_name
-
-    in_ch = 3*2
-    in_dim= 32
-    width = 4
-    model_struc = DM_Small(in_ch, in_dim, width)
-    interval_num = 10
-    epsilon = 0.1
-
+    # parameters of models
+    model_dir = args.model_dir
+    model_name = args.model_name
+    model_path = model_dir + model_name
     
-    model = RobustModel(model_path, log_path, model_struc, dataset='cifar', interval_num=interval_num, epsilon=epsilon)
+    structure = args.structure
+    if structure == 'DM_Small':
+        model_struc = DM_Small(in_ch, in_dim)
+    elif structure == 'DM_Medium':
+        model_struc = DM_Medium(in_ch, in_dim)
+    elif structure == 'DM_Large':
+        model_struc = DM_Large(in_ch, in_dim)
+    fnn = args.fnn
+    
+    # parameters of perturbation
+    interval_num = args.interval_num  # namely the length of total interval divides abstract granularity
+    epsilon = args.epsilon
+    
+    # parameters of training
+    batch_size = args.batch_size
+    epochs = args.epochs
+    learning_rate = args.learning_rate
+    
+    # parameters of logs
+    log_dir = args.log_dir
+    log_path = log_dir + model_name
+
+    model = RobustModel(model_path, log_path, model_struc, dataset=dataset, fnn=fnn, interval_num=interval_num, epsilon=epsilon, batch_size=batch_size, epochs=epochs, learning_rate=learning_rate)
     model.train()
 
     

@@ -74,7 +74,7 @@ def abstract_disturbed_data(x, interval_num, epsilon):
     x_upper_abstract_lower = -1 + k * step
     x_upper_abstract_upper = x_upper_abstract_lower + step 
 
-    # 取扰动区间下界的抽象区间的下界，取扰动区间上界的抽象区间的上界
+    # 取扰动区间下界的抽象区间的下界, 取扰动区间上界的抽象区间的上界
     x_result = torch.cat((x_lower_abstract_lower, x_upper_abstract_upper), dim=1)
 
     return x_result
