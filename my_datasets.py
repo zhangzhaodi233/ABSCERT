@@ -7,9 +7,11 @@ import numpy as np
 def load_dataset(batch_size=64, dataset='mnist'):
 
     # transforms.ToTensor() 只是将数据归一化到 [0, 1]
-    # transforms.Normalize() 则是将数据归一化到 [-1, 1]
+    # transforms.Normalize() 
+    # 如果 mean 均值和 std 标准差是通过数据集本身求出来的，那么经过处理后，数据被标准化，即均值为0，标准差为1，而并非归一化到 [-1, 1];
+    # 如果 mean 均值和 std 标准差 都为 0.5，那么 Normalize之后，数据分布是 [-1，1], 因为最小值 =（0-mean）/std=(0-0.5)/0.5=-1。同理最大值的等于1。最终则是将数据归一化到 [-1, 1]
     if dataset == 'mnist':
-        trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+        trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
         
         data_train = torchvision.datasets.MNIST(root='data/MNIST', 
                                                 train=True, download=True, 
@@ -18,8 +20,8 @@ def load_dataset(batch_size=64, dataset='mnist'):
                                                 train=False, download=True, 
                                                 transform=trans)
     elif dataset == 'cifar':
-        std = [0.2023, 0.1994, 0.2010]
-        mean = [0.4914, 0.4822, 0.4465]
+        std = [0.5, 0.5, 0.5]
+        mean = [0.5, 0.5, 0.5]
         trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize(mean = mean, std = std)])
         
         data_train = torchvision.datasets.CIFAR10(root='data/CIFAR10', 
@@ -47,7 +49,9 @@ def abstract_data(x, interval_num):
     step = (1-(-1))/interval_num
     k = torch.div((x - (-1)), step, rounding_mode='floor')
     x_lower = -1 + k * step
+    x_lower = torch.clamp(x_lower, -1, 1)
     x_upper = x_lower + step
+    x_upper = torch.clamp(x_upper, -1, 1)
 
     x_result = torch.cat((x_upper, x_lower), dim=1)
     return x_result
@@ -62,17 +66,22 @@ def abstract_disturbed_data(x, interval_num, epsilon):
 
     # 计算被扰动之后下界的抽象区间
     x_lower = x - epsilon
+    x_lower = torch.clamp(x_lower, -1, 1)
     
     step = (1-(-1))/interval_num
     k = torch.div((x_lower - (-1)), step, rounding_mode='floor')
     x_lower_abstract_lower = -1 + k * step 
+    x_lower_abstract_lower = torch.clamp(x_lower_abstract_lower, -1, 1)
 
     # 计算扰动之后上界的抽象区间
     x_upper = x + epsilon
+    x_upper = torch.clamp(x_upper, -1, 1)
     
     k = torch.div((x_upper - (-1)), step, rounding_mode='floor')
     x_upper_abstract_lower = -1 + k * step
+    x_upper_abstract_lower = torch.clamp(x_upper_abstract_lower, -1, 1)
     x_upper_abstract_upper = x_upper_abstract_lower + step 
+    x_upper_abstract_upper = torch.clamp(x_upper_abstract_upper, -1, 1)
 
     # 取扰动区间下界的抽象区间的下界, 取扰动区间上界的抽象区间的上界
     x_result = torch.cat((x_lower_abstract_lower, x_upper_abstract_upper), dim=1)

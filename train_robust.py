@@ -204,6 +204,8 @@ if __name__ == '__main__':
     # parameters of logs
     log_dir = args.log_dir
     log_path = log_dir + model_name
+    
+    print("--dataset {}, --model_name {}, --interval_num {}, --epsilon {:.6f}, --batch_size {}, --epochs {}, --learning_rate {:.5f}".format(dataset, model_name, interval_num, epsilon, batch_size, epochs, learning_rate))
 
     model = RobustModel(model_path, log_path, model_struc, dataset=dataset, fnn=fnn, interval_num=interval_num, epsilon=epsilon, batch_size=batch_size, epochs=epochs, learning_rate=learning_rate)
     model.train()
