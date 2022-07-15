@@ -19,6 +19,9 @@ tf.io.gfile = tb.compat.tensorflow_stub.io.gfile
 mnist_text_labels = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 cifar_text_labels = ['Airplane', "Automobile", "Bird", "Cat", "Deer", "Dog", "Frog", "Horse", "Ship", "Truck"]
 
+def printlog(s, model_name):
+    print(s, file=open("runs_normalize_txt/"+model_name+".txt", "a"))
+
 class RobustModel:
     def __init__(self, model_path, log_path, model, dataset, fnn=False, interval_num=1, epsilon=0, batch_size=256, epochs=10, learning_rate=0.01):
         self.batch_size = batch_size
@@ -49,6 +52,7 @@ class RobustModel:
         scheduler = get_cosine_schedule_with_warmup(optimizer, num_warmup_steps=300,
                                                     num_training_steps=num_training_steps,
                                                     num_cycles=2, last_epoch=last_epoch)
+        model_name = self.log_path.split("/")[1]
         
         writer = SummaryWriter(self.log_path)
         self.model = self.model.to(self.device)
@@ -73,6 +77,7 @@ class RobustModel:
                 if i%50 == 0:
                     acc = (logits.argmax(1) == y).float().mean()
                     print("### Epochs [{}/{}] --- batch[{}/{}] --- acc {:.4} --- loss {:.4}".format(epoch+1, self.epochs, i, len(train_iter), acc, loss.item()))
+                    printlog("### Epochs [{}/{}] --- batch[{}/{}] --- acc {:.4} --- loss {:.4}".format(epoch+1, self.epochs, i, len(train_iter), acc, loss.item()), model_name)
                     writer.add_scalar('Training/Accuracy', acc, scheduler.last_epoch)
                 writer.add_scalar('Training/Loss', loss.item(), scheduler.last_epoch)
                 writer.add_scalar('Training/Learning Rate', scheduler.get_last_lr()[0], scheduler.last_epoch)
@@ -81,6 +86,7 @@ class RobustModel:
             
             test_acc, all_logits, y_labels, label_img = self.evaluate(test_iter)
             print("### Epochs [{}/{}] -- Acc on test {:.4}".format(epoch + 1, self.epochs, test_acc))
+            printlog("### Epochs [{}/{}] -- Acc on test {:.4}".format(epoch + 1, self.epochs, test_acc), model_name)
             writer.add_scalar('Testing/Accuracy', test_acc, scheduler.last_epoch)
             writer.add_embedding(mat=all_logits,       # 所有点
                                  metadata=y_labels,    # 标签名称
@@ -89,6 +95,7 @@ class RobustModel:
 
             robust_acc, all_logits, y_labels, label_img = self.verify(test_iter)
             print("### Epochs [{}/{}] -- Robust Acc on test {:.4}".format(epoch + 1, self.epochs, robust_acc))
+            printlog("### Epochs [{}/{}] -- Robust Acc on test {:.4}".format(epoch + 1, self.epochs, robust_acc), model_name)
             writer.add_scalar('Verifying/Accuracy', robust_acc, scheduler.last_epoch)
 
 
@@ -100,6 +107,7 @@ class RobustModel:
                         self.model_save_path)
     
         print("### time of per epoch: {:.4}".format(time_sum / epoch))
+        printlog("### time of per epoch: {:.4}".format(time_sum / epoch), model_name)
     def evaluate(self, data_iter):
         self.model.eval()
         all_logits = []
@@ -206,6 +214,7 @@ if __name__ == '__main__':
     log_path = log_dir + model_name
     
     print("--dataset {}, --model_name {}, --interval_num {}, --epsilon {:.6f}, --batch_size {}, --epochs {}, --learning_rate {:.5f}".format(dataset, model_name, interval_num, epsilon, batch_size, epochs, learning_rate))
+    printlog("--dataset {}, --model_name {}, --interval_num {}, --epsilon {:.6f}, --batch_size {}, --epochs {}, --learning_rate {:.5f}".format(dataset, model_name, interval_num, epsilon, batch_size, epochs, learning_rate), model_name)
 
     model = RobustModel(model_path, log_path, model_struc, dataset=dataset, fnn=fnn, interval_num=interval_num, epsilon=epsilon, batch_size=batch_size, epochs=epochs, learning_rate=learning_rate)
     model.train()
