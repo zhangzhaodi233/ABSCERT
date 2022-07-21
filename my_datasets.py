@@ -87,3 +87,8 @@ def abstract_disturbed_data(x, interval_num, epsilon):
     x_result = torch.cat((x_lower_abstract_lower, x_upper_abstract_upper), dim=1)
 
     return x_result
+
+if __name__ == '__main__':
+    x = torch.Tensor([[0.6], [-0.5]])
+    x_result = abstract_data(x, 2)
+    print(x_result)
