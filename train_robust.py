@@ -20,7 +20,7 @@ mnist_text_labels = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 cifar_text_labels = ['Airplane', "Automobile", "Bird", "Cat", "Deer", "Dog", "Frog", "Horse", "Ship", "Truck"]
 
 def printlog(s, model_name):
-    print(s, file=open("runs_normalize_txt/"+model_name+".txt", "a"))
+    print(s, file=open("runs_v2_txt/"+model_name+".txt", "a"))
 
 class RobustModel:
     def __init__(self, model_path, log_path, model, dataset, fnn=False, interval_num=1, epsilon=0, batch_size=256, epochs=10, learning_rate=0.01):
@@ -67,7 +67,7 @@ class RobustModel:
                     elif self.dataset == 'cifar':
                         x = x.view(-1, 3*32*32)
                 
-                x = abstract_disturbed_data(x, self.interval_num, self.epsilon)
+                x = abstract_data(x, self.interval_num)
                 x, y = x.to(self.device), y.to(self.device)
                 loss, logits = self.model(x, y)
                 optimizer.zero_grad()
@@ -93,10 +93,10 @@ class RobustModel:
                                  label_img=label_img,  # 标签图片
                                  global_step=scheduler.last_epoch)
 
-            robust_acc, all_logits, y_labels, label_img = self.verify(test_iter)
-            print("### Epochs [{}/{}] -- Robust Acc on test {:.4}".format(epoch + 1, self.epochs, robust_acc))
-            printlog("### Epochs [{}/{}] -- Robust Acc on test {:.4}".format(epoch + 1, self.epochs, robust_acc), model_name)
-            writer.add_scalar('Verifying/Accuracy', robust_acc, scheduler.last_epoch)
+            # robust_acc, all_logits, y_labels, label_img = self.verify(test_iter)
+            # print("### Epochs [{}/{}] -- Robust Acc on test {:.4}".format(epoch + 1, self.epochs, robust_acc))
+            # printlog("### Epochs [{}/{}] -- Robust Acc on test {:.4}".format(epoch + 1, self.epochs, robust_acc), model_name)
+            # writer.add_scalar('Verifying/Accuracy', robust_acc, scheduler.last_epoch)
 
 
             if test_acc > max_test_acc:
@@ -105,8 +105,11 @@ class RobustModel:
             torch.save({'last_epoch': scheduler.last_epoch,
                         'model_state_dict': state_dict},
                         self.model_save_path)
-    
+        print("### max test accuracy: {:.4}".format(max_test_acc))
+        print("### error: {:.4}%".format((1 - max_test_acc)*100))
         print("### time of per epoch: {:.4}".format(time_sum / epoch))
+        printlog("### max test accuracy: {:.4}".format(max_test_acc), model_name)
+        printlog("### error: {:.4}%".format((1 - max_test_acc)*100), model_name)
         printlog("### time of per epoch: {:.4}".format(time_sum / epoch), model_name)
     def evaluate(self, data_iter):
         self.model.eval()
@@ -201,8 +204,9 @@ if __name__ == '__main__':
     fnn = args.fnn
     
     # parameters of perturbation
-    interval_num = args.interval_num  # namely the length of total interval divides abstract granularity
     epsilon = args.epsilon
+    k = args.k
+    interval_num = 2 // (k * epsilon)
     
     # parameters of training
     batch_size = args.batch_size
@@ -213,8 +217,8 @@ if __name__ == '__main__':
     log_dir = args.log_dir
     log_path = log_dir + model_name
     
-    print("--dataset {}, --model_name {}, --interval_num {}, --epsilon {:.6f}, --batch_size {}, --epochs {}, --learning_rate {:.5f}".format(dataset, model_name, interval_num, epsilon, batch_size, epochs, learning_rate))
-    printlog("--dataset {}, --model_name {}, --interval_num {}, --epsilon {:.6f}, --batch_size {}, --epochs {}, --learning_rate {:.5f}".format(dataset, model_name, interval_num, epsilon, batch_size, epochs, learning_rate), model_name)
+    print("--dataset {}, --model_name {}, --epsilon {:.6f}, --k {}, --batch_size {}, --epochs {}, --learning_rate {:.5f}".format(dataset, model_name, epsilon, k, batch_size, epochs, learning_rate))
+    printlog("--dataset {}, --model_name {}, --epsilon {:.6f}, --k {}, --batch_size {}, --epochs {}, --learning_rate {:.5f}".format(dataset, model_name, epsilon, k, batch_size, epochs, learning_rate), model_name)
 
     model = RobustModel(model_path, log_path, model_struc, dataset=dataset, fnn=fnn, interval_num=interval_num, epsilon=epsilon, batch_size=batch_size, epochs=epochs, learning_rate=learning_rate)
     model.train()
