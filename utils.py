@@ -14,8 +14,8 @@ def get_parameters():
     parser.add_argument('--structure', type=str, default="DM_Small", help='the strcture of the trained model')
     parser.add_argument('--fnn', type=bool, default=False, help='whether the trained model is fnn')
     
-    parser.add_argument('--interval_num', type=int, default=10, help='the number of abstract intervals')
     parser.add_argument('--epsilon', type=float, default=0.1, help='the epsilon for L_infinity perturbation')
+    parser.add_argument('--k', type=float, default=2.0, help='how many times the size of the abstract interval is the size of epsilon.')
     
     parser.add_argument('--batch_size', type=int, default=256, help='the number of samples per gradient update')
     parser.add_argument('--epochs', type=int, default=10, help='the number of epochs to train the model')
@@ -51,8 +51,9 @@ if __name__ == '__main__':
     fnn = args.fnn
     
     # parameters of perturbation
-    interval_num = args.interval_num  # namely the length of total interval divides abstract granularity
     epsilon = args.epsilon
+    k = args.k
+    interval_num = 2 // (k * epsilon)
     
     # parameters of training
     batch_size = args.batch_size
