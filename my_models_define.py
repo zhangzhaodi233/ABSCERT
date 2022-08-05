@@ -190,7 +190,7 @@ class DM_Large(nn.Module):
             nn.ReLU(),
             nn.Linear(linear_size, 10)
         )
-    
+
     def forward(self, img, labels=None):
         output = self.conv(img)
         logits = self.fc(output)

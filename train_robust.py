@@ -37,6 +37,14 @@ class RobustModel:
         self.epsilon = epsilon
 
     def train(self):
+		
+        def init_weights(m):
+            if type(m) == nn.Linear or type(m) == nn.Conv2d:
+                nn.init.xavier_uniform_(m.weight)
+		
+        self.model.conv.apply(init_weights)
+        self.model.fc.apply(init_weights)
+
         train_iter, test_iter = load_dataset(self.batch_size, self.dataset)
         last_epoch = -1
         # 接着之前的模型继续训练
@@ -47,7 +55,7 @@ class RobustModel:
 
         num_training_steps = len(train_iter) * self.epochs
         optimizer = torch.optim.Adam([{
-            "params": self.model.parameters(), "initial_lr": self.learning_rate
+            "params": self.model.parameters(), "initial_lr": self.learning_rate, "weight_decay": 0.0002
         }])
         scheduler = get_cosine_schedule_with_warmup(optimizer, num_warmup_steps=300,
                                                     num_training_steps=num_training_steps,
@@ -81,7 +89,6 @@ class RobustModel:
                     writer.add_scalar('Training/Accuracy', acc, scheduler.last_epoch)
                 writer.add_scalar('Training/Loss', loss.item(), scheduler.last_epoch)
                 writer.add_scalar('Training/Learning Rate', scheduler.get_last_lr()[0], scheduler.last_epoch)
-
             time_sum += time.time() - start
             
             test_acc, all_logits, y_labels, label_img = self.evaluate(test_iter)
@@ -179,11 +186,19 @@ class RobustModel:
             self.model.train()
             return acc_sum / n, torch.cat(all_logits, dim=0), y_labels, torch.cat(images, dim=0)
 
+def make_dir(filepath):
+    '''
+    如果文件夹不存在就创建
+    :param filepath:需要创建的文件夹路径
+    '''
+    if not os.path.exists(filepath):
+        os.mkdir(filepath)
 
 if __name__ == '__main__':
 
     args = get_parameters()
-    
+    make_dir('exp_results')
+    make_dir('runs_v2_txt')
     # parameters of dataset
     dataset = args.dataset
     in_ch = args.in_ch * 2

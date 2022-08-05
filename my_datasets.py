@@ -22,14 +22,21 @@ def load_dataset(batch_size=64, dataset='mnist'):
     elif dataset == 'cifar':
         std = [0.5, 0.5, 0.5]
         mean = [0.5, 0.5, 0.5]
-        trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize(mean = mean, std = std)])
+        trans_train = transforms.Compose([
+            transforms.ToTensor(), 
+            transforms.Normalize(mean = mean, std = std), 
+            transforms.RandomHorizontalFlip(),                            # 随机水平镜像
+            transforms.RandomErasing(scale=(0.04, 0.2), ratio=(0.5, 2)),  # 随机遮挡
+            transforms.RandomCrop(32, padding=4),                         # 随机中心裁剪
+        ])
+        trans_test = transforms.Compose([transforms.ToTensor(), transforms.Normalize(mean = mean, std = std)])
         
         data_train = torchvision.datasets.CIFAR10(root='data/CIFAR10', 
                                                 train=True, download=True, 
-                                                transform=trans)
+                                                transform=trans_train)
         data_test = torchvision.datasets.CIFAR10(root='data/CIFAR10', 
                                                 train=False, download=True, 
-                                                transform=trans)
+                                                transform=trans_test)
     
     train_iter = torch.utils.data.DataLoader(data_train,
                                              batch_size=batch_size,
@@ -52,6 +59,11 @@ def abstract_data(x, interval_num):
     x_lower = torch.clamp(x_lower, -1, 1)
     x_upper = x_lower + step
     x_upper = torch.clamp(x_upper, -1, 1)
+
+    # 改进，解决如果像素为1，映射到[1,1]的情况
+    eq = torch.eq(x_lower, x_upper)
+    x_lower = x_lower - step * eq.int()
+    x_lower = torch.clamp(x_lower, min=-1)
 
     x_result = torch.cat((x_upper, x_lower), dim=1)
     return x_result
