@@ -1,36 +1,49 @@
 import argparse
 from my_models_define import *
-    
+import json
+
+class Config(dict):
+    __setattr__ = dict.__setitem__
+    __getattr__ = dict.__getitem__
 
 def get_parameters():
     
     parser = argparse.ArgumentParser(description="Training Example", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--dataset', type=str, default="mnist", help='the kind of dataset')
-    parser.add_argument('--in_ch', type=int, default=1, help='the number of channels of the dataset image')
-    parser.add_argument('--in_dim', type=int, default=28, help='the width/hight of the dataset image')
+    # parser.add_argument('--dataset', type=str, default="mnist", help='the kind of dataset')
+    # parser.add_argument('--in_ch', type=int, default=1, help='the number of channels of the dataset image')
+    # parser.add_argument('--in_dim', type=int, default=28, help='the width/hight of the dataset image')
     
-    parser.add_argument('--model_dir', type=str, default="exp_results/", help='the folder where the model is saved')
-    parser.add_argument('--model_name', type=str, default="model_name", help='the name of the trained model')
-    parser.add_argument('--structure', type=str, default="DM_Small", help='the strcture of the trained model')
-    parser.add_argument('--fnn', type=bool, default=False, help='whether the trained model is fnn')
+    # parser.add_argument('--model_dir', type=str, default="exp_results/", help='the folder where the model is saved')
+    # parser.add_argument('--model_name', type=str, default="model_name", help='the name of the trained model')
+    # parser.add_argument('--structure', type=str, default="DM_Small", help='the strcture of the trained model')
+    # parser.add_argument('--fnn', type=bool, default=False, help='whether the trained model is fnn')
     
-    parser.add_argument('--epsilon', type=float, default=0.1, help='the epsilon for L_infinity perturbation')
-    parser.add_argument('--k', type=float, default=2.0, help='how many times the size of the abstract interval is the size of epsilon.')
+    # parser.add_argument('--epsilon', type=float, default=0.1, help='the epsilon for L_infinity perturbation')
+    # parser.add_argument('--k', type=float, default=2.0, help='how many times the size of the abstract interval is the size of epsilon.')
     
-    parser.add_argument('--batch_size', type=int, default=256, help='the number of samples per gradient update')
-    parser.add_argument('--epochs', type=int, default=10, help='the number of epochs to train the model')
-    parser.add_argument('--learning_rate', type=float, default=0.01, help='the step size at each iteration while moving toward a minimum of a loss function.')
+    # parser.add_argument('--batch_size', type=int, default=256, help='the number of samples per gradient update')
+    # parser.add_argument('--epochs', type=int, default=10, help='the number of epochs to train the model')
+    # parser.add_argument('--learning_rate', type=float, default=0.01, help='the step size at each iteration while moving toward a minimum of a loss function.')
     
-    parser.add_argument('--log_dir', type=str, default="runs/", help='the folder where the log is saved')
+    # parser.add_argument('--log_dir', type=str, default="runs/", help='the folder where the log is saved')
     
+    parser.add_argument('--config', type=str, help="the config file to storage model, dataset and hyperparameter")
     args = parser.parse_args()
     
-    return args
+    config = Config()
+    default_config_file = json.load(open("./config/default.json", 'r'))
+    for k, v in default_config_file.items():
+        config[k] = v
+    config_file = json.load(open("./config/" + args.config, 'r'))
+    for k, v in config_file.items():
+        config[k] = v
+    
+    return config
 
 if __name__ == '__main__':
     
     args = get_parameters()
-    
+
     # parameters of dataset
     dataset = args.dataset
     in_ch = args.in_ch * 2
@@ -48,7 +61,7 @@ if __name__ == '__main__':
         model_struc = DM_Medium(in_ch, in_dim)
     elif structure == 'DM_Large':
         model_struc = DM_Large(in_ch, in_dim)
-    fnn = args.fnn
+    fnn = args.fnn == "True"
     
     # parameters of perturbation
     epsilon = args.epsilon
