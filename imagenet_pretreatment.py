@@ -2,8 +2,8 @@ from scipy import io
 import os
 import shutil
 
-
 # 这个文件的主要作用是将ImageNet的验证集合重整为和训练集一样的形式
+# 参数val_dir是验证集的图像目录，devkit_dir是验证集标签的目录
 
 def move_valimg(val_dir='./data/ImageNet/valid', devkit_dir='./data/ImageNet/ILSVRC2012_devkit_t12'):
     """
@@ -19,17 +19,17 @@ def move_valimg(val_dir='./data/ImageNet/valid', devkit_dir='./data/ImageNet/ILS
     """
     # load synset, val ground truth and val images list
     synset = io.loadmat(os.path.join(devkit_dir, 'data', 'meta.mat'))
-
+    
     ground_truth = open(os.path.join(devkit_dir, 'data', 'ILSVRC2012_validation_ground_truth.txt'))
     lines = ground_truth.readlines()
     labels = [int(line[:-1]) for line in lines]
-
+    
     root, _, filenames = next(os.walk(val_dir))
     for filename in filenames:
         # val image name -> ILSVRC ID -> WIND
         val_id = int(filename.split('.')[0].split('_')[-1])
-        ILSVRC_ID = labels[val_id - 1]
-        WIND = synset['synsets'][ILSVRC_ID - 1][0][1][0]
+        ILSVRC_ID = labels[val_id-1]
+        WIND = synset['synsets'][ILSVRC_ID-1][0][1][0]
         print("val_id:%d, ILSVRC_ID:%d, WIND:%s" % (val_id, ILSVRC_ID, WIND))
 
         # move val images
@@ -39,7 +39,6 @@ def move_valimg(val_dir='./data/ImageNet/valid', devkit_dir='./data/ImageNet/ILS
         else:
             os.mkdir(output_dir)
         shutil.move(os.path.join(root, filename), os.path.join(output_dir, filename))
-
 
 if __name__ == '__main__':
     move_valimg()

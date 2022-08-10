@@ -1,3 +1,5 @@
+import math
+import numpy as np
 import torch
 import torch.nn as nn
 
@@ -9,7 +11,7 @@ from transformers import get_cosine_schedule_with_warmup
 
 import os
 from my_models_define import *
-from utils import *
+from utils import * 
 from my_datasets import load_dataset, abstract_data, abstract_disturbed_data
 import time
 from d2l import torch as d2l
@@ -19,38 +21,35 @@ from d2l import torch as d2l
 mnist_text_labels = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 cifar_text_labels = ['Airplane', "Automobile", "Bird", "Cat", "Deer", "Dog", "Frog", "Horse", "Ship", "Truck"]
 
-
-def printlog(s, model_name, dataset):
-    print(s, file=open("result/" + model_name + ".txt", "a"))
-
+def printlog(s, model_name):
+    print(s, file=open("result/"+model_name+".txt", "a"))
 
 class RobustModel:
-    def __init__(self, model_path, log_path, model, dataset, fnn=False, interval_num=1, epsilon=0, batch_size=256, epochs=10, learning_rate=0.01, optimizer="Adam", weight_decay=0.0001, momentum=0.9, init="xavier"):
+    def __init__(self, model_path, log_path, model, dataset, fnn=False, interval_num=1, batch_size=256, epochs=10, learning_rate=0.01, optimizer="Adam", weight_decay=0.0001, momentum=0.9, init="xavier"):
         self.batch_size = batch_size
         self.epochs = epochs
         self.learning_rate = learning_rate
-        self.model_save_path = model_path + '.pt'
+        self.model_save_path = model_path
         self.log_path = log_path
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         self.model = model
         self.fnn = fnn
         self.dataset = dataset
         self.interval_num = interval_num
-        self.epsilon = epsilon
         self.optimizer = optimizer
         self.momentum = momentum
         self.weight_decay = weight_decay
         self.init = init
 
     def train(self):
-
+		
         def init_weights(m):
             if type(m) == nn.Linear or type(m) == nn.Conv2d:
                 if self.init == "gaussian":
                     nn.init.normal_(m.weight, mean=0, std=0.01)
                 else:  # 默认xavier分布
                     nn.init.xavier_uniform_(m.weight)
-
+		
         self.model.conv.apply(init_weights)
         self.model.fc.apply(init_weights)
 
@@ -70,13 +69,14 @@ class RobustModel:
             }])
         else:
             optimizer = torch.optim.Adam([{
-                "params": self.model.parameters(), "initial_lr": self.learning_rate, "weight_decay": self.weight_decay
+                "params": self.model.parameters(), "lr": self.learning_rate, "weight_decay": self.weight_decay
             }])
-        scheduler = get_cosine_schedule_with_warmup(optimizer, num_warmup_steps=int(self.epochs * len_train_iter / 10),
-                                                    num_training_steps=num_training_steps,
-                                                    num_cycles=2, last_epoch=last_epoch)
+        # scheduler = get_cosine_schedule_with_warmup(optimizer, num_warmup_steps=int(self.epochs * len_train_iter / 10),
+        #                                             num_training_steps=num_training_steps,
+        #                                             num_cycles=2, last_epoch=last_epoch)
+        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, math.ceil(self.epochs/4), 0.1, -1)  # 下调3次
         model_name = self.log_path.split("/")[1]
-
+        
         # writer = SummaryWriter(self.log_path)
         animator = d2l.Animator(xlabel='epoch', xlim=[1, self.epochs], legend=['train loss', 'train acc', 'test acc'])
         self.model = self.model.to(self.device)
@@ -86,34 +86,40 @@ class RobustModel:
             # 查看学习率
             # print(optimizer.state_dict()['param_groups'][0]['lr'])
             start = time.time()
-            for i, (x, y) in enumerate(train_iter):
+            for i, data in enumerate(train_iter):
+                if self.dataset == 'imagenet':
+                    x = data[0]["data"]
+                    y = data[0]["label"].squeeze(-1).long().to(x.device)
+                else:
+                    x, y = data
+                    x, y = x.to(self.device), y.to(self.device)
                 if self.fnn:
                     if self.dataset == 'mnist':
                         x = x.view(-1, 784)
                     elif self.dataset == 'cifar':
-                        x = x.view(-1, 3 * 32 * 32)
+                        x = x.view(-1, 3*32*32)
 
                 x = abstract_data(x, self.interval_num)
-                x, y = x.to(self.device), y.to(self.device)
+                
                 loss, logits = self.model(x, y)
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
-                scheduler.step()
-                if i % 50 == 0:
+                # scheduler.step()
+                if i%50 == 0:
                     acc = (logits.argmax(1) == y).float().mean()
-                    print("### Epochs [{}/{}] --- batch[{}/{}] --- acc {:.4} --- loss {:.4}".format(epoch + 1, self.epochs, i, len(train_iter), acc, loss.item()))
-                    printlog("### Epochs [{}/{}] --- batch[{}/{}] --- acc {:.4} --- loss {:.4}".format(epoch + 1, self.epochs, i, len(train_iter), acc, loss.item()), model_name, self.dataset)
+                    print("### Epochs [{}/{}] --- batch[{}/{}] --- acc {:.4} --- loss {:.4}".format(epoch+1, self.epochs, i, len(train_iter), acc, loss.item()))
+                    printlog("### Epochs [{}/{}] --- batch[{}/{}] --- acc {:.4} --- loss {:.4}".format(epoch+1, self.epochs, i, len(train_iter), acc, loss.item()), model_name)
                     animator.add(epoch + (i + 1) / len_train_iter, (loss.detach().cpu(), acc.cpu(), None))
                     # writer.add_scalar('Training/Accuracy', acc, scheduler.last_epoch)
                 # writer.add_scalar('Training/Loss', loss.item(), scheduler.last_epoch)
                 # writer.add_scalar('Training/Learning Rate', scheduler.get_last_lr()[0], scheduler.last_epoch)
             time_sum += time.time() - start
-
+            scheduler.step()
             # test_acc, all_logits, y_labels, label_img = self.evaluate(test_iter)
             test_acc = self.evaluate(test_iter)
             print("### Epochs [{}/{}] -- Acc on test {:.4}".format(epoch + 1, self.epochs, test_acc))
-            printlog("### Epochs [{}/{}] -- Acc on test {:.4}".format(epoch + 1, self.epochs, test_acc), model_name, self.dataset)
+            printlog("### Epochs [{}/{}] -- Acc on test {:.4}".format(epoch + 1, self.epochs, test_acc), model_name)
             animator.add(epoch + 1, (None, None, test_acc))
             # writer.add_scalar('Testing/Accuracy', test_acc, scheduler.last_epoch)
             # writer.add_embedding(mat=all_logits,       # 所有点
@@ -126,41 +132,47 @@ class RobustModel:
             # printlog("### Epochs [{}/{}] -- Robust Acc on test {:.4}".format(epoch + 1, self.epochs, robust_acc), model_name)
             # writer.add_scalar('Verifying/Accuracy', robust_acc, scheduler.last_epoch)
 
+
             if test_acc > max_test_acc:
                 max_test_acc = test_acc
                 state_dict = self.model.state_dict()
             torch.save({'last_epoch': scheduler.last_epoch,
                         'model_state_dict': state_dict},
-                       self.model_save_path)
+                        self.model_save_path + '.pt')
         print("### max test accuracy: {:.4}".format(max_test_acc))
-        print("### error: {:.4}%".format((1 - max_test_acc) * 100))
+        print("### error: {:.4}%".format((1 - max_test_acc)*100))
         print("### time of per epoch: {:.4}".format(time_sum / epoch))
-        printlog("### max test accuracy: {:.4}".format(max_test_acc), model_name, self.dataset)
-        printlog("### error: {:.4}%".format((1 - max_test_acc) * 100), model_name, self.dataset)
-        printlog("### time of per epoch: {:.4}".format(time_sum / epoch), model_name, self.dataset)
-        d2l.plt.savefig(f'{self.model_save_path[:-3]}.png')
-
+        printlog("### max test accuracy: {:.4}".format(max_test_acc), model_name)
+        printlog("### error: {:.4}%".format((1 - max_test_acc)*100), model_name)
+        printlog("### time of per epoch: {:.4}".format(time_sum / epoch), model_name)
+        d2l.plt.savefig(f'{self.model_save_path}.png')
+        return max_test_acc, 2/self.interval_num
     def evaluate(self, data_iter):
         self.model.eval()
-        # all_logits = []
-        # y_labels = []
-        # images = []
+        #all_logits = []
+        #y_labels = []
+        #images = []
         with torch.no_grad():
             acc_sum, n = 0.0, 0
-            for x, y in data_iter:
+            for data in data_iter:
+                if self.dataset == 'imagenet':
+                    x = data[0]["data"]
+                    y = data[0]["label"].squeeze(-1).long().to(x.device)
+                else:
+                    x, y = data
+                    x, y = x.to(self.device), y.to(self.device)
 
                 if self.fnn:
                     if self.dataset == 'mnist':
                         x_fnn = x.view(-1, 784)
                     elif self.dataset == 'cifar':
-                        x_fnn = x.view(-1, 3 * 32 * 32)
+                        x_fnn = x.view(-1, 3*32*32)
                     x_abstract = abstract_data(x_fnn, self.interval_num)
                 else:
                     x_abstract = abstract_data(x, self.interval_num)
-
-                x_abstract, y = x_abstract.to(self.device), y.to(self.device)
+                    
                 logits = self.model(x_abstract)
-
+            
                 acc_sum += (logits.argmax(1) == y).float().sum().item()
                 n += len(y)
 
@@ -173,7 +185,8 @@ class RobustModel:
                 # images.append(x)
             self.model.train()
             # 在imagenet上这里后面的数据如果不注释掉，会报错内存溢出（需要分配28G显存）
-            return acc_sum / n  # , torch.cat(all_logits, dim=0), y_labels, torch.cat(images, dim=0)
+            return acc_sum / n # , torch.cat(all_logits, dim=0), y_labels, torch.cat(images, dim=0)
+
 
     def verify(self, data_iter):
         self.model.eval()
@@ -183,19 +196,19 @@ class RobustModel:
         with torch.no_grad():
             acc_sum, n = 0.0, 0
             for x, y in data_iter:
-
+        
                 if self.fnn:
                     if self.dataset == 'mnist':
                         x_fnn = x.view(-1, 784)
                     elif self.dataset == 'cifar':
-                        x_fnn = x.view(-1, 3 * 32 * 32)
+                        x_fnn = x.view(-1, 3*32*32)
                     x_disturbed_abstract = abstract_disturbed_data(x_fnn, self.interval_num, self.epsilon)
                 else:
                     x_disturbed_abstract = abstract_disturbed_data(x, self.interval_num, self.epsilon)
-
+          
                 x_disturbed_abstract, y = x_disturbed_abstract.to(self.device), y.to(self.device)
                 logits = self.model(x_disturbed_abstract)
-
+                
                 acc_sum += (logits.argmax(1) == y).float().sum().item()
                 n += len(y)
 
@@ -209,7 +222,6 @@ class RobustModel:
             self.model.train()
             return acc_sum / n, torch.cat(all_logits, dim=0), y_labels, torch.cat(images, dim=0)
 
-
 def make_dir(filepath):
     '''
     如果文件夹不存在就创建
@@ -219,8 +231,7 @@ def make_dir(filepath):
         os.mkdir(filepath)
 
 
-if __name__ == '__main__':
-
+def run():
     args = get_parameters()
     make_dir('exp_results')
     make_dir('result')
@@ -228,12 +239,12 @@ if __name__ == '__main__':
     dataset = args.dataset
     in_ch = args.in_ch * 2
     in_dim = args.in_dim
-
+    
     # parameters of models
     model_dir = args.model_dir
     model_name = args.model_name
     model_path = model_dir + model_name
-
+    
     structure = args.structure
     if structure == 'DM_Small':
         model_struc = DM_Small(in_ch, in_dim)
@@ -244,22 +255,19 @@ if __name__ == '__main__':
     elif structure == 'LeNet':  # MNIST和CIFAR
         model_struc = LeNet5(in_ch, in_dim)
     elif structure == 'AlexNet':  # IMAGENET
-        model_struc = AlexNet()
-    elif structure == 'VGG':  # IMAGENET
-        model_struc = VGG11()
-    elif structure == 'ResNet':  # IMAGENET
-        model_struc = ResNet18()
+        model_struc = AlexNet(in_ch)
+    elif structure == 'VGG11':  # IMAGENET
+        model_struc = VGG11(in_ch)
+    elif structure == 'ResNet18':  # IMAGENET
+        model_struc = ResNet18(in_ch)
     fnn = args.fnn == 'True'
     # parameters of perturbation
-    epsilon = args.epsilon
-    k = args.k
-    interval_num = 2 // (k * epsilon)
-
+    
     # parameters of training
     batch_size = args.batch_size
     epochs = args.epochs
     learning_rate = args.learning_rate
-
+    
     # parameters of logs
     log_dir = args.log_dir
     log_path = log_dir + model_name
@@ -268,12 +276,56 @@ if __name__ == '__main__':
     weight_decay = args.weight_decay
     momentum = args.momentum
     init = args.init
+    
 
-    print("--dataset {}, --model_name {}, --epsilon {:.6f}, --k {}, --batch_size {}, --epochs {}, --learning_rate {:.5f}".format(dataset, model_name, epsilon, k, batch_size, epochs, learning_rate))
-    printlog("--dataset {}, --model_name {}, --epsilon {:.6f}, --k {}, --batch_size {}, --epochs {}, --learning_rate {:.5f}".format(dataset, model_name, epsilon, k, batch_size, epochs, learning_rate), model_name, dataset)
+    eta_init = args.eta_init
+    eta_step = args.eta_step
+    eta_threshold = args.eta_threshold
+    times = args.times
 
-    model = RobustModel(model_path, log_path, model_struc, dataset=dataset, fnn=fnn, interval_num=interval_num, epsilon=epsilon, batch_size=batch_size, epochs=epochs, learning_rate=learning_rate,
-                        optimizer=optimizer, weight_decay=weight_decay, momentum=momentum, init=init)
-    model.train()
+    i, j = 0, 0
+    eta_range = []
+    eta = eta_init
+    while eta < 1.001:
+        eta_range.append(round(eta, 3))
+        if j < len(eta_threshold) and eta >= eta_threshold[j]:
+            i += 1
+            j += 1
+        eta += eta_step[i]
+    
+    sum_acc = [0] * len(eta_range)
+    for _ in range(times):
+        record = []
+        for i, eta in enumerate(eta_range):
+            interval_num = 2 // eta
+            model_path_ = model_path + f'_{round(eta, 3)}'
+
+            print("--dataset {}, --model_name {}, --eta {:.3f}, --batch_size {}, --epochs {}, --learning_rate {:.5f}".format(dataset, model_name, eta, batch_size, epochs, learning_rate))
+            printlog("--dataset {}, --model_name {}, --eta {:.3f}, --batch_size {}, --epochs {}, --learning_rate {:.5f}".format(dataset, model_name, eta, batch_size, epochs, learning_rate), model_name)
+
+            model = RobustModel(model_path_, log_path, model_struc, dataset=dataset, fnn=fnn, interval_num=interval_num, batch_size=batch_size, epochs=epochs, learning_rate=learning_rate,
+                optimizer=optimizer, weight_decay=weight_decay, momentum=momentum, init=init)
+            test_acc, real_eta = model.train()
+            record.append([round(real_eta, 3), test_acc])
+            sum_acc[i] += test_acc
+
+        print(record)
+        printlog(record, model_name)
 
 
+    # 计算均值
+    avg_acc = [round(acc / times, 3) for acc in sum_acc]
+    printlog(avg_acc)
+    printlog([(acc, a[1]) for acc, a in zip(avg_acc, record)], model_name)
+
+    # 画图
+    d2l.plt.cla()
+    d2l.plt.plot(avg_acc, [data[1] for data in record],
+            color='red', linewidth=1.0, linestyle='-')
+    d2l.plt.xlabel('Abstract Granularity')
+    d2l.plt.ylabel('Test acc')
+    d2l.plt.savefig(f'{model_path}_summary.png')
+
+if __name__ == '__main__':
+
+    run()

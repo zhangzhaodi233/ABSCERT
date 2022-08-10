@@ -1,7 +1,7 @@
 {
     "dataset": "imagenet",
     "in_ch": 3,
-    "in_dim": 28,
+    "in_dim": 224,
     "model_dir": "exp_results/",
     "model_name": "imagenet_alexnet_0_008",
     "structure": "AlexNet",

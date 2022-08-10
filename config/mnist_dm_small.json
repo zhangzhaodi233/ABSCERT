@@ -3,13 +3,15 @@
     "in_ch": 1,
     "in_dim": 28,
     "model_dir": "exp_results/",
-    "model_name": "mnist_small_0_008",
+    "model_name": "mnist_dm_small",
     "structure": "DM_Small",
     "fnn": "False",
-    "epsilon": 0.1,
-    "k": 0.08,
     "batch_size": 256,
-    "epochs": 100,
+    "epochs": 10,
     "learning_rate": 0.001,
-    "log_dir": "runs/"
+    "log_dir": "runs/",
+    "eta_init": 0.01,
+    "eta_step": [0.01, 0.05],
+    "eta_threshold": [0.2],
+    "times": 100
 }

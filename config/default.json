@@ -6,8 +6,6 @@
     "model_name": "mnist_lenet_0_008",
     "structure": "LeNet",
     "fnn": "False",
-    "epsilon": 0.1,
-    "k": 0.08,
     "batch_size": 128,
     "epochs": 10,
     "learning_rate": 0.01,
@@ -15,5 +13,9 @@
     "optimizer": "Adam",
     "weight_decay": 0.0002,
     "momentum": 0.9,
-    "init": "xavier"
+    "init": "xavier",
+    "eta_init": 0.01,
+    "eta_step": [0.01, 0.05],
+    "eta_threshold": [0.2],
+    "times": 1
 }
