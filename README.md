@@ -1,6 +1,6 @@
 # TrainRobustNN
 
-TrainRobustNN is the official implementation for paper ["Abstraction-based Training Verified Robust Neural Networks"](). In this project, we propose a elegant method to train verifiable robust neural networks through abstracting input images. The experiment shows that our method is much better than other verifiable robust methods in both accuracy and efficiency.
+TrainRobustNN is the official implementation for paper ["Abstraction-based Training Verified Robust Neural Networks"](). In this project, we propose an elegant method to train verifiable robust neural networks through abstracting input images. The experiment shows that our method is much better than other verifiable robust methods in both accuracy and efficiency.
 
 ## Start with the code
 
@@ -37,7 +37,7 @@ To train and verify model LeNet5 on CIFAR with predefined hyper-parameters, run:
 
 	python train_robust.py --config cifar_lenet.json
 
-To train and verify model on ImageNet, you need to download the Imagenet dataset first. After that, put the training set to **"./data/Imagenet/train"** and put the verification set to **"./data/Imagenet/valid"**. Note that you need to reform the verification set just like the training set.   
+To train and verify model on ImageNet, you need to download the Imagenet dataset first. After that, put the training set to **"./data/ImageNet/train"** and put the verification set to **"./data/ImageNet/valid"**. Note that you need to reform the verification set just like the training set.   
 To train and verify model AlexNet on ImageNet with predefined hyper-parameters, run:
 
 	python train_robust.py --config imagenet_alexnet.json
@@ -57,7 +57,7 @@ We show our state-of-art verification results below：
 | CIFAR10      | DM_Medium | 0.1                  |  99%   |  10s   |
 | CIFAR10      | DM_Large  | 0.1                  |  99%   |  10s   |
 | CIFAR10      | LeNet5    | 0.1                  |  99%   |  10s   |
-| CIFAR10      | AlexNet   | 0.1                  |  99%   |  10s   |
+| ImageNet     | AlexNet   | 0.1                  |  99%   |  10s   |
 | ImageNet     | VGG11     | 0.1                  |  99%   |  10s   |
 | ImageNet     | ResNet18  | 0.1                  |  99%   |  10s   |
 | ImageNet     | ResNet34  | 0.1                  |  99%   |  10s   |
