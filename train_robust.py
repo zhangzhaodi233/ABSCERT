@@ -22,10 +22,13 @@ mnist_text_labels = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 cifar_text_labels = ['Airplane', "Automobile", "Bird", "Cat", "Deer", "Dog", "Frog", "Horse", "Ship", "Truck"]
 
 def printlog(s, model_name):
-    print(s, file=open("result/"+model_name+".txt", "a"))
+    print(s, file=open("result/"+model_name+".log", "a"))
+
+def print_concise_log(s, model_name):
+    print(s, file=open("result/"+model_name+"_concise.log", "a"))
 
 class RobustModel:
-    def __init__(self, model_path, log_path, model, dataset, fnn=False, interval_num=1, batch_size=256, epochs=10, learning_rate=0.01, optimizer="Adam", weight_decay=0.0001, momentum=0.9, init="xavier"):
+    def __init__(self, model_path, log_path, model, dataset, fnn=False, interval_num=1, batch_size=256, epochs=10, learning_rate=0.01, optimizer="Adam", weight_decay=0.0001, momentum=0.9, init="xavier", lr_scheduler='cosine'):
         self.batch_size = batch_size
         self.epochs = epochs
         self.learning_rate = learning_rate
@@ -40,6 +43,7 @@ class RobustModel:
         self.momentum = momentum
         self.weight_decay = weight_decay
         self.init = init
+        self.lr_scheduler = lr_scheduler
 
     def train(self):
 		
@@ -71,10 +75,12 @@ class RobustModel:
             optimizer = torch.optim.Adam([{
                 "params": self.model.parameters(), "lr": self.learning_rate, "weight_decay": self.weight_decay
             }])
-        # scheduler = get_cosine_schedule_with_warmup(optimizer, num_warmup_steps=int(self.epochs * len_train_iter / 10),
-        #                                             num_training_steps=num_training_steps,
-        #                                             num_cycles=2, last_epoch=last_epoch)
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, math.ceil(self.epochs/4), 0.1, -1)  # 下调3次
+        if self.lr_scheduler == "steplr":
+            scheduler = torch.optim.lr_scheduler.StepLR(optimizer, math.ceil(self.epochs/4), 0.1, -1)  # 下调3次
+        else:
+            scheduler = get_cosine_schedule_with_warmup(optimizer, num_warmup_steps=int(self.epochs * len_train_iter / 10),
+                                                    num_training_steps=num_training_steps,
+                                                    num_cycles=2, last_epoch=last_epoch)
         model_name = self.log_path.split("/")[1]
         
         # writer = SummaryWriter(self.log_path)
@@ -84,7 +90,7 @@ class RobustModel:
         time_sum = 0
         for epoch in range(self.epochs):
             # 查看学习率
-            # print(optimizer.state_dict()['param_groups'][0]['lr'])
+            print(optimizer.state_dict()['param_groups'][0]['lr'])
             start = time.time()
             for i, data in enumerate(train_iter):
                 if self.dataset == 'imagenet':
@@ -105,7 +111,8 @@ class RobustModel:
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
-                # scheduler.step()
+                if self.lr_scheduler != "steplr":
+                    scheduler.step()
                 if i%50 == 0:
                     acc = (logits.argmax(1) == y).float().mean()
                     print("### Epochs [{}/{}] --- batch[{}/{}] --- acc {:.4} --- loss {:.4}".format(epoch+1, self.epochs, i, len(train_iter), acc, loss.item()))
@@ -115,7 +122,8 @@ class RobustModel:
                 # writer.add_scalar('Training/Loss', loss.item(), scheduler.last_epoch)
                 # writer.add_scalar('Training/Learning Rate', scheduler.get_last_lr()[0], scheduler.last_epoch)
             time_sum += time.time() - start
-            scheduler.step()
+            if self.lr_scheduler == "steplr":
+                scheduler.step()
             # test_acc, all_logits, y_labels, label_img = self.evaluate(test_iter)
             test_acc = self.evaluate(test_iter)
             print("### Epochs [{}/{}] -- Acc on test {:.4}".format(epoch + 1, self.epochs, test_acc))
@@ -146,7 +154,7 @@ class RobustModel:
         printlog("### error: {:.4}%".format((1 - max_test_acc)*100), model_name)
         printlog("### time of per epoch: {:.4}".format(time_sum / epoch), model_name)
         d2l.plt.savefig(f'{self.model_save_path}.png')
-        return max_test_acc, 2/self.interval_num
+        return max_test_acc
     def evaluate(self, data_iter):
         self.model.eval()
         #all_logits = []
@@ -230,6 +238,27 @@ def make_dir(filepath):
     if not os.path.exists(filepath):
         os.mkdir(filepath)
 
+def generate_eta(epsilon_list, eta_step=0.01):
+    """compute Abstract Granularity eta until eta < 2 * epsilon"""
+    eta_list = []
+    eta_threshold = []
+    last_eta = 2.0
+    e = 0
+    for i in range(2, 256, 1):  # divide the input interval to i parts
+        eta = 2.0 / i
+        if eta < 2 * epsilon_list[e]:
+            real_eta_for_epsilon = 2 / int(1 / epsilon_list[e])
+            if real_eta_for_epsilon not in eta_list:
+                eta_list.append(real_eta_for_epsilon)
+            eta_threshold.append(real_eta_for_epsilon)
+            e += 1
+        if e >= len(epsilon_list):
+            break
+        if last_eta - eta >= eta_step:  # avoid too much eta
+            eta_list.append(eta)
+            last_eta = eta
+    
+    return eta_list, eta_threshold
 
 def run():
     args = get_parameters()
@@ -276,56 +305,47 @@ def run():
     weight_decay = args.weight_decay
     momentum = args.momentum
     init = args.init
-    
+    lr_scheduler = args.lr_scheduler
 
-    eta_init = args.eta_init
     eta_step = args.eta_step
-    eta_threshold = args.eta_threshold
-    times = args.times
+    epsilon_list = args.epsilon
+    epsilon_list = sorted(epsilon_list, reverse=True)
 
-    i, j = 0, 0
-    eta_range = []
-    eta = eta_init
-    while eta < 1.001:
-        eta_range.append(round(eta, 3))
-        if j < len(eta_threshold) and eta >= eta_threshold[j]:
-            i += 1
-            j += 1
-        eta += eta_step[i]
+    eta_range, eta_threshold = generate_eta(epsilon_list, eta_step)
     
-    sum_acc = [0] * len(eta_range)
-    for _ in range(times):
-        record = []
-        for i, eta in enumerate(eta_range):
-            interval_num = 2 // eta
-            model_path_ = model_path + f'_{round(eta, 3)}'
+    record = []
+    for i, eta in enumerate(eta_range):
+        interval_num = 2 // eta
+        model_path_ = model_path + f'_{eta}'
 
-            print("--dataset {}, --model_name {}, --eta {:.3f}, --batch_size {}, --epochs {}, --learning_rate {:.5f}".format(dataset, model_name, eta, batch_size, epochs, learning_rate))
-            printlog("--dataset {}, --model_name {}, --eta {:.3f}, --batch_size {}, --epochs {}, --learning_rate {:.5f}".format(dataset, model_name, eta, batch_size, epochs, learning_rate), model_name)
+        print("--dataset {}, --model_name {}, --eta {:.3f}, --batch_size {}, --epochs {}, --learning_rate {:.5f}".format(dataset, model_name, eta, batch_size, epochs, learning_rate))
+        printlog("--dataset {}, --model_name {}, --eta {:.3f}, --batch_size {}, --epochs {}, --learning_rate {:.5f}".format(dataset, model_name, eta, batch_size, epochs, learning_rate), model_name)
+        d2l.plt.cla()
+        model = RobustModel(model_path_, log_path, model_struc, dataset=dataset, fnn=fnn, interval_num=interval_num, batch_size=batch_size, epochs=epochs, learning_rate=learning_rate,
+            optimizer=optimizer, weight_decay=weight_decay, momentum=momentum, init=init, lr_scheduler=lr_scheduler)
+        test_acc = model.train()
+        record.append([eta, test_acc])
 
-            model = RobustModel(model_path_, log_path, model_struc, dataset=dataset, fnn=fnn, interval_num=interval_num, batch_size=batch_size, epochs=epochs, learning_rate=learning_rate,
-                optimizer=optimizer, weight_decay=weight_decay, momentum=momentum, init=init)
-            test_acc, real_eta = model.train()
-            record.append([round(real_eta, 3), test_acc])
-            sum_acc[i] += test_acc
+    # print log
+    printlog(f"Train result: \n{record}\n\n", model_name)
+    max_acc, etaa = 0, 2.0
+    i = 0
+    for r in record:
+        if r[1] > max_acc:
+            max_acc, etaa = r[1], r[0]
+        if r[0] in eta_threshold:
+            print(f"For epsilon {epsilon_list[i]}, the max verify acc = {max_acc} occers at eta = {etaa}.")
+            printlog(f"For epsilon {epsilon_list[i]}, the max verify acc = {max_acc} occers at eta = {etaa}.", model_name)
+            print_concise_log(f"For epsilon {epsilon_list[i]}, the max verify acc = {max_acc} occers at eta = {etaa}.", model_name)
+            i += 1
 
-        print(record)
-        printlog(record, model_name)
-
-
-    # 计算均值
-    avg_acc = [round(acc / times, 3) for acc in sum_acc]
-    printlog(avg_acc)
-    printlog([(acc, a[1]) for acc, a in zip(avg_acc, record)], model_name)
-
-    # 画图
+    # draw
     d2l.plt.cla()
-    d2l.plt.plot(avg_acc, [data[1] for data in record],
+    d2l.plt.plot([data[0] for data in record], [data[1] for data in record],
             color='red', linewidth=1.0, linestyle='-')
     d2l.plt.xlabel('Abstract Granularity')
     d2l.plt.ylabel('Test acc')
     d2l.plt.savefig(f'{model_path}_summary.png')
 
 if __name__ == '__main__':
-
     run()
