@@ -33,9 +33,9 @@ To train and verify model DM_Small on MNIST with predefined hyper-parameters, ru
 
 	python train_robust.py --config mnist_dm_small.json
 
-To train and verify model LeNet5 on CIFAR with predefined hyper-parameters, run:
+To train and verify model DM_Small on CIFAR with predefined hyper-parameters, run:
 
-	python train_robust.py --config cifar_lenet.json
+	python train_robust.py --config cifar_dm_small.json
 
 To train and verify model on ImageNet, you need to download the Imagenet dataset first. After that, put the training set to **"./data/ImageNet/train"** and put the verification set to **"./data/ImageNet/valid"**. Note that you need to reform the verification set just like the training set.   
 To train and verify model AlexNet on ImageNet with predefined hyper-parameters, run:

@@ -3,7 +3,7 @@
     "in_ch": 1,
     "in_dim": 28,
     "model_dir": "exp_results/",
-    "model_name": "mnist_lenet_0_008",
+    "model_name": "mnist_lenet",
     "structure": "LeNet",
     "fnn": "False",
     "batch_size": 128,
@@ -11,11 +11,11 @@
     "learning_rate": 0.01,
     "log_dir": "runs/",
     "optimizer": "Adam",
+    "lr_scheduler": "cosine",
     "weight_decay": 0.0002,
     "momentum": 0.9,
     "init": "xavier",
-    "eta_init": 0.01,
-    "eta_step": [0.01, 0.05],
-    "eta_threshold": [0.2],
-    "times": 1
+    "eta": 0.008,
+    "epsilon": [0.0078432, 0.0156863, 0.0235295, 0.0313726, 0.0627451, 0.1, 0.2, 0.3, 0.4],
+    "eta_step": 0.01
 }
