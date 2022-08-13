@@ -45,20 +45,20 @@ To train and verify model AlexNet on ImageNet with predefined hyper-parameters, 
 
 ## Main Result
 
-We show our state-of-art verification results below：
+We show part of our state-of-art verification results below：
 
-| Dataset      | Model     | Abstract Granularity | Acc    | Time   |
-| :----------: | :-------: | :------------------: | :----: | :----: |
-| MNIST        | DM_Small  | 0.1                  |  99%   |  7.6s  |
-| MNIST        | DM_Medium | 0.1                  |  99%   |  10s   |
-| MNIST        | DM_Large  | 0.1                  |  99%   |  10s   |
-| MNIST        | LeNet5    | 0.1                  |  99%   |  10s   |
-| CIFAR10      | DM_Small  | 0.1                  |  99%   |  10s   |
-| CIFAR10      | DM_Medium | 0.1                  |  99%   |  10s   |
-| CIFAR10      | DM_Large  | 0.1                  |  99%   |  10s   |
-| CIFAR10      | LeNet5    | 0.1                  |  99%   |  10s   |
-| ImageNet     | AlexNet   | 0.1                  |  99%   |  10s   |
-| ImageNet     | VGG11     | 0.1                  |  99%   |  10s   |
-| ImageNet     | ResNet18  | 0.1                  |  99%   |  10s   |
-| ImageNet     | ResNet34  | 0.1                  |  99%   |  10s   |
-| ImageNet     | ResNet50  | 0.1                  |  99%   |  10s   |
+| Dataset      | Model     | l∞ Perturbation(ε) | Abstract Granularity(η) | Acc    | Time(s)   |
+| :----------: | :-------: | :----------------: | :------------------: | :----: | :----: |
+| MNIST        | DM_Small  | 0.1                | 0.200                  |  99.10%   |  2.18  |
+| MNIST        | DM_Medium | 0.1                | 0.222                  |  99.36%   |  2.32   |
+| MNIST        | DM_Large  | 0.1                | 0.285                  |  99.43%   |  4.28   |
+| CIFAR10      | DM_Small  | 2/255              | 0.064                  |  74.48%   |  3.31   |
+| CIFAR10      | DM_Medium | 2/255              | 0.035                  |  83.60%   |  3.58   |
+| CIFAR10      | DM_Large  | 2/255              | 0.045                  |  86.19%   |  5.29   |
+| ImageNet     | AlexNet   | 2/255              | 0.1                  |  99%   |  10s   |
+| ImageNet     | VGG11     | 2/255              | 0.1                  |  99%   |  10s   |
+| ImageNet     | ResNet18  | 2/255              | 0.1                  |  99%   |  10s   |
+| ImageNet     | ResNet34  | 2/255              | 0.1                  |  99%   |  10s   |
+| ImageNet     | ResNet50  | 2/255              | 0.1                  |  99%   |  10s   |
+
+Note that we set η >= 2 · ε for each experiemnt. 

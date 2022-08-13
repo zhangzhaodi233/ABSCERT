@@ -119,11 +119,11 @@ def load_dataset(batch_size=64, dataset='mnist'):
         train_iter = torch.utils.data.DataLoader(data_train,
                                              batch_size=batch_size,
                                              shuffle=True,
-                                             num_workers= 1) # num_workers 工作者数量，默认是0。使用多少个子进程来导入数据。设置为0，就是使用主进程来导入数据
+                                             num_workers= 6) # num_workers 工作者数量，默认是0。使用多少个子进程来导入数据。设置为0，就是使用主进程来导入数据
         test_iter = torch.utils.data.DataLoader(data_test,
                                             batch_size=batch_size,
                                             shuffle=False,
-                                            num_workers=0)
+                                            num_workers=6)
     elif dataset == 'cifar':
         std = [0.5, 0.5, 0.5]
         mean = [0.5, 0.5, 0.5]
@@ -145,11 +145,11 @@ def load_dataset(batch_size=64, dataset='mnist'):
         train_iter = torch.utils.data.DataLoader(data_train,
                                              batch_size=batch_size,
                                              shuffle=True,
-                                             num_workers= 1) # num_workers 工作者数量，默认是0。使用多少个子进程来导入数据。设置为0，就是使用主进程来导入数据
+                                             num_workers= 6) # num_workers 工作者数量，默认是0。使用多少个子进程来导入数据。设置为0，就是使用主进程来导入数据
         test_iter = torch.utils.data.DataLoader(data_test,
                                             batch_size=batch_size,
                                             shuffle=False,
-                                            num_workers=0)
+                                            num_workers=6)
     elif dataset == 'imagenet':
         # std = [0.5, 0.5, 0.5]
         # mean = [0.5, 0.5, 0.5]

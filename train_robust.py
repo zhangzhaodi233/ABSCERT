@@ -90,7 +90,7 @@ class RobustModel:
         time_sum = 0
         for epoch in range(self.epochs):
             # 查看学习率
-            print(optimizer.state_dict()['param_groups'][0]['lr'])
+            # print(optimizer.state_dict()['param_groups'][0]['lr'])
             start = time.time()
             for i, data in enumerate(train_iter):
                 if self.dataset == 'imagenet':
@@ -320,7 +320,7 @@ def run():
 
         print("--dataset {}, --model_name {}, --eta {:.3f}, --batch_size {}, --epochs {}, --learning_rate {:.5f}".format(dataset, model_name, eta, batch_size, epochs, learning_rate))
         printlog("--dataset {}, --model_name {}, --eta {:.3f}, --batch_size {}, --epochs {}, --learning_rate {:.5f}".format(dataset, model_name, eta, batch_size, epochs, learning_rate), model_name)
-        d2l.plt.cla()
+        d2l.plt.clf()
         model = RobustModel(model_path_, log_path, model_struc, dataset=dataset, fnn=fnn, interval_num=interval_num, batch_size=batch_size, epochs=epochs, learning_rate=learning_rate,
             optimizer=optimizer, weight_decay=weight_decay, momentum=momentum, init=init, lr_scheduler=lr_scheduler)
         test_acc = model.train()
@@ -340,7 +340,7 @@ def run():
             i += 1
 
     # draw
-    d2l.plt.cla()
+    d2l.plt.clf()
     d2l.plt.plot([data[0] for data in record], [data[1] for data in record],
             color='red', linewidth=1.0, linestyle='-')
     d2l.plt.xlabel('Abstract Granularity')
