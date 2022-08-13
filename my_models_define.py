@@ -356,3 +356,115 @@ class ResNet18(nn.Module):
             return y_hat
 
 
+class ResNet34(nn.Module):
+    def __init__(self, in_ch):
+        super().__init__()
+        b1 = nn.Sequential(nn.Conv2d(in_ch, 64, kernel_size=(7,7), stride=(2,2), padding=(3,3)),
+                           nn.BatchNorm2d(64),
+                           nn.ReLU(),
+                           nn.MaxPool2d(kernel_size=3, stride=2, padding=1))
+        b2 = nn.Sequential(*resnet_block(64, 64, 3, first_block=True))
+        b3 = nn.Sequential(*resnet_block(64, 128, 4))
+        b4 = nn.Sequential(*resnet_block(128, 256, 6))
+        b5 = nn.Sequential(*resnet_block(256, 512, 3))
+        self.conv = nn.Sequential(
+            b1,b2,b3,b4,b5,
+            nn.AdaptiveAvgPool2d((1,1))
+        )
+        self.fc = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(512, 1000)
+        )
+    
+    def forward(self, x, y=None):  # 要求输入x形状为(batch_size, 3, 224, 224)
+        output = self.conv(x)
+        y_hat = self.fc(output)
+        if y is not None:
+            loss = nn.CrossEntropyLoss(reduction='mean')
+            l = loss(y_hat, y)
+            return l, y_hat
+        else:
+            return y_hat
+
+
+
+
+class Residual_50(nn.Module):
+    """残差块"""
+    def __init__(self, input_channels, middle_channels, num_channels,
+                 use_1x1conv=False, strides=1):
+        super().__init__()
+        self.conv1 = nn.Conv2d(input_channels, middle_channels,
+                               kernel_size=(1,1), padding=0)
+        self.conv2 = nn.Conv2d(middle_channels, middle_channels,
+                               kernel_size=(3,3), padding=(1,1), stride=strides)
+        self.conv3 = nn.Conv2d(middle_channels, num_channels,
+                                kernel_size=(1,1), padding=0)
+
+        if use_1x1conv:
+            self.conv4 = nn.Conv2d(input_channels, num_channels,
+                                   kernel_size=(1,1), stride=strides)  # 作用是改变通道数，使得x和y通道数一样
+        else:
+            self.conv4 = None
+        self.bn1 = nn.BatchNorm2d(middle_channels)
+        self.bn2 = nn.BatchNorm2d(middle_channels)
+        self.bn3 = nn.BatchNorm2d(num_channels)
+        self.relu = nn.ReLU()
+
+    def forward(self,x):
+        y = self.relu(self.bn1(self.conv1(x)))
+        y = self.relu(self.bn2(self.conv2(y)))
+        y = self.bn3(self.conv3(y))
+        if self.conv4:
+            x = self.conv4(x)
+        y+=x
+        return F.relu(y)
+
+
+def resnet_block_50(input_channels, middle_channels, num_channels, num_residuals,
+                 first_block=False):
+    """如果first_block为True，则不将高宽减半通道加倍，反之..."""
+    blk = []
+    for i in range(num_residuals):
+        if i==0: 
+            if first_block:
+                blk.append(Residual_50(input_channels, middle_channels, num_channels, use_1x1conv=True,
+                                strides=1))
+            else:
+                blk.append(Residual_50(input_channels, middle_channels, num_channels, use_1x1conv=True,
+                                strides=2))
+        else:
+            blk.append(Residual_50(num_channels, middle_channels, num_channels))
+    return blk
+
+
+class ResNet50(nn.Module):
+    def __init__(self, in_ch):
+        super().__init__()
+        b1 = nn.Sequential(nn.Conv2d(in_ch, 64, kernel_size=(7,7), stride=(2,2), padding=(3,3)),
+                           nn.BatchNorm2d(64),
+                           nn.ReLU(),
+                           nn.MaxPool2d(kernel_size=3, stride=2, padding=1))
+        b2 = nn.Sequential(*resnet_block_50(64, 64, 256, 3, first_block=True))
+        b3 = nn.Sequential(*resnet_block_50(256, 128, 512, 4))
+        b4 = nn.Sequential(*resnet_block_50(512, 256, 1024, 6))
+        b5 = nn.Sequential(*resnet_block_50(1024, 512, 2048, 3))
+        self.conv = nn.Sequential(
+            b1,b2,b3,b4,b5,
+            nn.AdaptiveAvgPool2d((1,1))
+        )
+        self.fc = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(2048, 1000)
+        )
+    
+    def forward(self, x, y=None):  # 要求输入x形状为(batch_size, 3, 224, 224)
+        output = self.conv(x)
+        y_hat = self.fc(output)
+        if y is not None:
+            loss = nn.CrossEntropyLoss(reduction='mean')
+            l = loss(y_hat, y)
+            return l, y_hat
+        else:
+            return y_hat
+
