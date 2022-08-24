@@ -1,0 +1,20 @@
+{
+    "dataset": "imagenet",
+    "in_ch": 3,
+    "in_dim": 224,
+    "model_dir": "exp_results/",
+    "model_name": "imagenet_resnet18",
+    "structure": "ResNet18",
+    "fnn": "False",
+    "batch_size": 256,
+    "epochs": 150,
+    "learning_rate": 0.1,
+    "log_dir": "runs/",
+    "optimizer": "SGD",
+    "lr_scheduler": "steplr",
+    "weight_decay": 0.0001,
+    "momentum": 0.9,
+    "init": "kaiming",
+    "epsilon": [0.0078432, 0.0156863, 0.0235295, 0.0313726, 0.0627451],
+    "eta_step": 0.04
+}
