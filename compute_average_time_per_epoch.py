@@ -1,4 +1,4 @@
-# 依据log计算所有η模型的每个epoch的平均训练时间
+# Calculate the average training time of each epoch of all models according to the log
 
 def catpe(file_name):
     with open('result/'+file_name, 'r') as f:
@@ -18,3 +18,7 @@ if __name__ == "__main__":
     catpe('cifar_dm_small.log')
     catpe('cifar_dm_medium.log')
     catpe('cifar_dm_large.log')
+    catpe('imagenet_alexnet.log')
+    catpe('imagenet_vgg11.log')
+    catpe('imagenet_resnet18.log')
+    catpe('imagenet_resnet34.log')

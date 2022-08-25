@@ -2,8 +2,10 @@ from scipy import io
 import os
 import shutil
 
-# 这个文件的主要作用是将ImageNet的验证集合重整为和训练集一样的形式
-# 参数val_dir是验证集的图像目录，devkit_dir是验证集标签的目录
+# The main function of this file is to reorganize the verification set of Imagenet 
+# into the same form as the training set
+# Parameter val_dir is the image directory of the verification set, 
+# devkit_dir is the directory of the validation set label
 
 def move_valimg(val_dir='./data/ImageNet/valid', devkit_dir='./data/ImageNet/ILSVRC2012_devkit_t12'):
     """

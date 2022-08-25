@@ -170,7 +170,7 @@ def load_dataset(batch_size=64, dataset='mnist'):
         # data_test = torchvision.datasets.ImageFolder(root='data/ImageNet/valid',
         #     transform=trans_test)
 
-        train_iter, test_iter = get_dali_iter(batch_size, num_threads=8, device_id=0, 
+        train_iter, test_iter = get_dali_iter(batch_size, num_threads=16, device_id=0, 
             train_data_root='data/ImageNet/train', test_data_root='data/ImageNet/valid', 
             img_size=224, use_gpu=True)
 
