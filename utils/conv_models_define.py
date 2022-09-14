@@ -1,7 +1,5 @@
-import torch
 import torch.nn as nn
 from torch.nn import functional as F
-from my_datasets import abstract_data
 
 class LeNet5(nn.Module):
     def __init__(self, in_ch, in_dim):

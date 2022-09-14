@@ -1,5 +1,5 @@
 import argparse
-from my_models_define import *
+from utils.conv_models_define import *
 import json
 
 class Config(dict):

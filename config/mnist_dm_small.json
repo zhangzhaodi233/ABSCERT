@@ -2,14 +2,14 @@
     "dataset": "mnist",
     "in_ch": 1,
     "in_dim": 28,
-    "model_dir": "exp_results/",
+    "model_dir": "output/models/",
     "model_name": "mnist_dm_small",
     "structure": "DM_Small",
     "fnn": "False",
     "batch_size": 256,
     "epochs": 10,
     "learning_rate": 0.001,
-    "log_dir": "runs/",
+    "log_dir": "output/log/",
     "epsilon": [0.0078432, 0.0156863, 0.0235295, 0.0313726, 0.0627451],
-    "eta_step": 0.01
+    "d_step": 0.01
 }

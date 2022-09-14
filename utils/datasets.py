@@ -1,8 +1,6 @@
-from re import L
 import torch
 import torchvision
 import torchvision.transforms as transforms
-import numpy as np
 from nvidia.dali.pipeline import Pipeline
 import nvidia.dali.ops as ops
 from nvidia.dali.plugin.pytorch import DALIClassificationIterator
@@ -145,11 +143,11 @@ def load_dataset(batch_size=64, dataset='mnist'):
         train_iter = torch.utils.data.DataLoader(data_train,
                                              batch_size=batch_size,
                                              shuffle=True,
-                                             num_workers= 6) # num_workers 工作者数量，默认是0。使用多少个子进程来导入数据。设置为0，就是使用主进程来导入数据
+                                             num_workers= 1) # num_workers 工作者数量，默认是0。使用多少个子进程来导入数据。设置为0，就是使用主进程来导入数据
         test_iter = torch.utils.data.DataLoader(data_test,
                                             batch_size=batch_size,
                                             shuffle=False,
-                                            num_workers=6)
+                                            num_workers=1)
     elif dataset == 'imagenet':
         # std = [0.5, 0.5, 0.5]
         # mean = [0.5, 0.5, 0.5]
@@ -196,7 +194,7 @@ def abstract_data(x, interval_num):
     x_result = torch.cat((x_upper, x_lower), dim=1)
     return x_result
 
-# 如何将扰动区间映射到抽象区间
+# 一次珍贵的尝试，虽然后来抛弃了，但它也是我们走过的路
 def abstract_disturbed_data(x, interval_num, epsilon):
 
     # 比如 x = (-0.55, 0.55), eps = 0.1, 则 x 的扰动区间为 ([-0.65, -0.45][0.45, 0.65])
