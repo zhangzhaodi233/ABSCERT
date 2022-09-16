@@ -1,6 +1,6 @@
 import torch
-import utils.datasets as datasets
-import utils.conv_models_define as conv_models_define
+import TrainRobustNN.etc.datasets as datasets
+import TrainRobustNN.etc.conv_models_define as conv_models_define
 import numpy as np
 
 
@@ -46,7 +46,7 @@ def abstract_PGDattack(model, epsilon, iter, d):
     n = 0
     for i, (x, y) in enumerate(iter):
         channel = x.shape[1]
-        abstract_x = conv_models_define.abstract_data(x, int(2.0 / d))
+        abstract_x = datasets.abstract_data(x, int(2.0 / d))
         abstract_x.requires_grad = True
         loss, logits = model(abstract_x, y)
         grad = torch.autograd.grad(loss, abstract_x)[0]  # batch_size, channel*2, height, width
@@ -55,13 +55,15 @@ def abstract_PGDattack(model, epsilon, iter, d):
             (grad[:, :channel, :, :] > 0) & (grad[:, channel:, :, :] < 0) & (grad[:, :channel, :, :] > grad[:, channel:, :, :]) | \
             (grad[:, :channel, :, :] < 0) & (grad[:, channel:, :, :] > 0) & (grad[:, :channel, :, :] < grad[:, channel:, :, :])).int() * 2 - 1
         # 扰动区间
-        x_interval = torch.cat((torch.clamp(x - epsilon, min=-1), torch.clamp(x + epsilon, max=1)), dim=1)
+        x_interval = torch.cat((torch.clamp(x + epsilon, max=1), torch.clamp(x - epsilon, min=-1)), dim=1)
         # 如果抽象状态上界 < 扰动区间上界 or 抽象状态下界 > 扰动区间下界，则为true，意为扰动，否则不扰动
         mask = (abstract_x[:, :channel, :, :] < x_interval[:, :channel, :, :]) | (abstract_x[:, channel:, :, :] > x_interval[:, channel:, :, :])
+
         attack_abstract_x, larger = attack_abstract_data(x, int(2.0/d))
         # 如果扰动逆梯度，则不扰动
         if_eps = torch.clamp(grad_increase_direction * larger, min=0)  # 梯度考虑0不扰动，1扰动
         mask = if_eps * mask.int()  # 0不扰动，1扰动
+        mask = mask.repeat((1,2,1,1))  # 通道数加倍
         new_abstract_x = attack_abstract_x * mask + abstract_x * (1-mask)
 
         correct_origin += (logits.argmax(1) == y).float().sum().item()
@@ -72,8 +74,38 @@ def abstract_PGDattack(model, epsilon, iter, d):
 
 
 if __name__ == '__main__':
-    _, test_iter = datasets.load_dataset(64)
+    _, test_iter = datasets.load_dataset(64, dataset='mnist')
     model = conv_models_define.DM_Small(2, 28)
-    pretrained_model = "exp_results/mnist_dm_small_0.1.pt"
+    pretrained_model = "../output/models/mnist_dm_small_0.1.pt"
     model.load_state_dict(torch.load(pretrained_model)['model_state_dict'])
-    abstract_PGDattack(model, 0.05, test_iter, 0.1)
+    print(abstract_PGDattack(model, 0.05, test_iter, 0.1))
+
+    _, test_iter = datasets.load_dataset(64, dataset='mnist')
+    model = conv_models_define.DM_Medium(2, 28)
+    pretrained_model = "../output/models/mnist_dm_medium_0.1.pt"
+    model.load_state_dict(torch.load(pretrained_model)['model_state_dict'])
+    print(abstract_PGDattack(model, 0.05, test_iter, 0.1))
+
+    _, test_iter = datasets.load_dataset(64, dataset='mnist')
+    model = conv_models_define.DM_Large(2, 28)
+    pretrained_model = "../output/models/mnist_dm_large_0.1.pt"
+    model.load_state_dict(torch.load(pretrained_model)['model_state_dict'])
+    print(abstract_PGDattack(model, 0.05, test_iter, 0.1))
+
+    _, test_iter = datasets.load_dataset(64, dataset='cifar')
+    model = conv_models_define.DM_Small(6, 32)
+    pretrained_model = "../output/models/cifar_dm_small_0.1.pt"
+    model.load_state_dict(torch.load(pretrained_model)['model_state_dict'])
+    print(abstract_PGDattack(model, 0.05, test_iter, 0.1))
+
+    _, test_iter = datasets.load_dataset(64, dataset='cifar')
+    model = conv_models_define.DM_Medium(6, 32)
+    pretrained_model = "../output/models/cifar_dm_medium_0.1.pt"
+    model.load_state_dict(torch.load(pretrained_model)['model_state_dict'])
+    print(abstract_PGDattack(model, 0.05, test_iter, 0.1))
+
+    _, test_iter = datasets.load_dataset(64, dataset='cifar')
+    model = conv_models_define.DM_Large(6, 32)
+    pretrained_model = "../output/models/cifar_dm_large_0.1.pt"
+    model.load_state_dict(torch.load(pretrained_model)['model_state_dict'])
+    print(abstract_PGDattack(model, 0.05, test_iter, 0.1))

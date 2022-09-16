@@ -2,8 +2,8 @@ import math
 import os
 import torch
 from d2l import torch as d2l
-from utils.conv_models_define import *
-from utils import datasets
+from TrainRobustNN.etc.conv_models_define import *
+from TrainRobustNN.etc import datasets
 
 # Visualization of the output features for convolution layer
 # We implement the process for DM_Small on ImageNet

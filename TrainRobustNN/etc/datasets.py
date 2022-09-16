@@ -108,10 +108,10 @@ def load_dataset(batch_size=64, dataset='mnist'):
     if dataset == 'mnist':
         trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
         
-        data_train = torchvision.datasets.MNIST(root='data/MNIST', 
+        data_train = torchvision.datasets.MNIST(root='../data/MNIST', 
                                                 train=True, download=True, 
                                                 transform=trans)
-        data_test = torchvision.datasets.MNIST(root='data/MNIST', 
+        data_test = torchvision.datasets.MNIST(root='../data/MNIST', 
                                                 train=False, download=True, 
                                                 transform=trans)
         train_iter = torch.utils.data.DataLoader(data_train,
@@ -134,10 +134,10 @@ def load_dataset(batch_size=64, dataset='mnist'):
         ])
         trans_test = transforms.Compose([transforms.ToTensor(), transforms.Normalize(mean = mean, std = std)])
         
-        data_train = torchvision.datasets.CIFAR10(root='data/CIFAR10', 
+        data_train = torchvision.datasets.CIFAR10(root='../data/CIFAR10', 
                                                 train=True, download=True, 
                                                 transform=trans_train)
-        data_test = torchvision.datasets.CIFAR10(root='data/CIFAR10', 
+        data_test = torchvision.datasets.CIFAR10(root='../data/CIFAR10', 
                                                 train=False, download=True, 
                                                 transform=trans_test)
         train_iter = torch.utils.data.DataLoader(data_train,
@@ -169,7 +169,7 @@ def load_dataset(batch_size=64, dataset='mnist'):
         #     transform=trans_test)
 
         train_iter, test_iter = get_dali_iter(batch_size, num_threads=16, device_id=0, 
-            train_data_root='data/ImageNet/train', test_data_root='data/ImageNet/valid', 
+            train_data_root='../data/ImageNet/train', test_data_root='../data/ImageNet/valid', 
             img_size=224, use_gpu=True)
 
     return train_iter, test_iter

@@ -1,8 +1,8 @@
 from d2l import torch as d2l
 import numpy as np
 import itertools
-from utils import datasets
-from utils import conv_models_define
+from TrainRobustNN.etc import datasets
+from TrainRobustNN.etc import conv_models_define
 import torch
 import os
 import matplotlib

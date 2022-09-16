@@ -1,10 +1,10 @@
 import os
 import torch
-from train.train_v1 import *
-from refinement.refinement_v1 import refinement
-from utils.utils import get_parameters
-from utils.conv_models_define import *
-from utils.fc_models_define import *
+from TrainRobustNN.train.train_v1 import *
+from TrainRobustNN.refinement.refinement_v1 import refinement
+from TrainRobustNN.etc.utils import get_parameters
+from TrainRobustNN.etc.conv_models_define import *
+from TrainRobustNN.etc.fc_models_define import *
 
 
 

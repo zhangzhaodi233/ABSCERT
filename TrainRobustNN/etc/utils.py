@@ -1,5 +1,5 @@
 import argparse
-from utils.conv_models_define import *
+from TrainRobustNN.etc.conv_models_define import *
 import json
 
 class Config(dict):

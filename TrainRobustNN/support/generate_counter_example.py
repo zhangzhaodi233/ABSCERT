@@ -1,7 +1,7 @@
 import os
 import torch
-from utils import datasets
-from utils import conv_models_define
+from TrainRobustNN.etc import datasets
+from TrainRobustNN.etc import conv_models_define
 from d2l import torch as d2l
 
 
@@ -58,7 +58,7 @@ if __name__ == "__main__":
     model = model.to('cuda:0')
     d = float(pretrained_model.split('_')[-1][:-3])
     generate_counter_example(test_iter, model, d)
-    draw(test_iter, model, d)
+    draw_same_examples(test_iter, model, d)
 
 
 # 找规律 看这些同一错误分类的抽象状态是否有某种规律，然后在训练的过程中是否可以将这种“规律“规避掉以提高精度

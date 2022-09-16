@@ -1,11 +1,11 @@
 import torch
 from torch import nn
-from utils.datasets import load_dataset, abstract_data
+from TrainRobustNN.etc.datasets import load_dataset, abstract_data
 import math
 import time
 from transformers import get_cosine_schedule_with_warmup
 from d2l import torch as d2l
-from valid.valid_v1 import valid
+from TrainRobustNN.valid.valid_v1 import valid
 
 
 def printlog(s, log_path):
