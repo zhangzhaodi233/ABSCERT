@@ -6,7 +6,7 @@ from d2l import torch as d2l
 
 
 
-# 找到所有的反例并绘制原图
+# find all the counter examples and draw raw images
 def generate_counter_example(test_iter, model, d):
     for i, (x,y) in enumerate(test_iter):
         origin_x = x.clone()
@@ -14,7 +14,7 @@ def generate_counter_example(test_iter, model, d):
         x, y = x.to('cuda:0'), y.to('cuda:0')
         y_hat = model(x)
         if y_hat.argmax(1) != y:
-            # 绘制原图
+            # draw raw images
             ytrue = y.to('cpu').detach().numpy()[0]
             yhat = y_hat.argmax(1).to('cpu').detach().numpy()[0]
             d2l.plt.imshow(origin_x.squeeze(0).squeeze(0))
@@ -61,7 +61,4 @@ if __name__ == "__main__":
     draw_same_examples(test_iter, model, d)
 
 
-# 找规律 看这些同一错误分类的抽象状态是否有某种规律，然后在训练的过程中是否可以将这种“规律“规避掉以提高精度
-# 在规避的过程中一定要考虑到“对之前的映射函数会有什么影响？映射函数是否会发生改变”
-# 所做的一切都要保证：抽象状态之间不能有交集，抽象状态组合起来是整个状态空间。
 

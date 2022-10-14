@@ -57,7 +57,7 @@ We show part of our state-of-art verification results below：
 | CIFAR10      | DM_Large  | 2/255              | 0.045                  |  86.19%   |  5.29   |
 | ImageNet     | AlexNet   | 2/255              | 0.1                  |  55.04%   |  481.35   |
 | ImageNet     | VGG11     | 2/255              | 0.1                  |  99%   |  10s   |
-| ImageNet     | ResNet18  | 2/255              | 0.1                  |  99%   |  10s   |
+| ImageNet     | ResNet18  | 2/255              | 0.1                  |  67.85%   |  208.10   |
 | ImageNet     | ResNet34  | 2/255              | 0.1                  |  99%   |  10s   |
 | ImageNet     | ResNet50  | 2/255              | 0.1                  |  99%   |  10s   |
 

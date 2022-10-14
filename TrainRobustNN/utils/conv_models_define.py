@@ -229,7 +229,7 @@ class AlexNet(nn.Module):
             nn.Dropout(p=0.5),
             nn.Linear(4096, 1000)
         )
-    def forward(self, x, y=None):  # 要求输入x形状为(batch_size, 3, 256, 256)
+    def forward(self, x, y=None):  # x: (batch_size, 3, 256, 256)
         output = self.conv(x)
         y_hat = self.fc(output)
         if y is not None:
@@ -276,7 +276,7 @@ class VGG11(nn.Module):
             nn.Linear(4096, 1000)
         )
 
-    def forward(self, x, y=None):  # 要求输入x形状为(batch_size, 3, 224, 224)
+    def forward(self, x, y=None):  # x: (batch_size, 3, 224, 224)
         output = self.conv(x)
         y_hat = self.fc(output)
         if y is not None:
@@ -287,7 +287,7 @@ class VGG11(nn.Module):
             return y_hat
 
 class Residual(nn.Module):
-    """残差块"""
+    """residual block"""
     def __init__(self, input_channels, num_channels,
                  use_1x1conv=False, strides=1):
         super().__init__()
@@ -297,7 +297,7 @@ class Residual(nn.Module):
                                kernel_size=(3,3), padding=(1,1))
         if use_1x1conv:
             self.conv3 = nn.Conv2d(input_channels, num_channels,
-                                   kernel_size=(1,1), stride=strides)  # 作用是改变通道数，使得x和y通道数一样
+                                   kernel_size=(1,1), stride=strides)
         else:
             self.conv3 = None
         self.bn1 = nn.BatchNorm2d(num_channels)
@@ -314,7 +314,10 @@ class Residual(nn.Module):
 
 def resnet_block(input_channels, num_channels, num_residuals,
                  first_block=False):
-    """如果first_block为True，则不将高宽减半通道加倍，反之..."""
+    """
+    If first_block is True, then the height and width will not be halved and the channel will not be doubled. 
+    Else, half height and width, double channel
+    """
     blk = []
     for i in range(num_residuals):
         if i==0 and not first_block:
@@ -343,7 +346,7 @@ class ResNet18(nn.Module):
             nn.Flatten(),
             nn.Linear(512, 1000)
         )
-    def forward(self, x, y=None):  # 要求输入x形状为(batch_size, 3, 224, 224)
+    def forward(self, x, y=None):  # x: (batch_size, 3, 224, 224)
         output = self.conv(x)
         y_hat = self.fc(output)
         if y is not None:
@@ -374,7 +377,7 @@ class ResNet34(nn.Module):
             nn.Linear(512, 1000)
         )
     
-    def forward(self, x, y=None):  # 要求输入x形状为(batch_size, 3, 224, 224)
+    def forward(self, x, y=None):  # x: (batch_size, 3, 224, 224)
         output = self.conv(x)
         y_hat = self.fc(output)
         if y is not None:
@@ -388,7 +391,7 @@ class ResNet34(nn.Module):
 
 
 class Residual_50(nn.Module):
-    """残差块"""
+    """residual block"""
     def __init__(self, input_channels, middle_channels, num_channels,
                  use_1x1conv=False, strides=1):
         super().__init__()
@@ -401,7 +404,7 @@ class Residual_50(nn.Module):
 
         if use_1x1conv:
             self.conv4 = nn.Conv2d(input_channels, num_channels,
-                                   kernel_size=(1,1), stride=strides)  # 作用是改变通道数，使得x和y通道数一样
+                                   kernel_size=(1,1), stride=strides)
         else:
             self.conv4 = None
         self.bn1 = nn.BatchNorm2d(middle_channels)
@@ -421,7 +424,10 @@ class Residual_50(nn.Module):
 
 def resnet_block_50(input_channels, middle_channels, num_channels, num_residuals,
                  first_block=False):
-    """如果first_block为True，则不将高宽减半通道加倍，反之..."""
+    """
+    If first_block is True, then the height and width will not be halved and the channel will not be doubled. 
+    Else, half height and width, double channel
+    """
     blk = []
     for i in range(num_residuals):
         if i==0: 
@@ -456,7 +462,7 @@ class ResNet50(nn.Module):
             nn.Linear(2048, 1000)
         )
     
-    def forward(self, x, y=None):  # 要求输入x形状为(batch_size, 3, 224, 224)
+    def forward(self, x, y=None):  # x: (batch_size, 3, 224, 224)
         output = self.conv(x)
         y_hat = self.fc(output)
         if y is not None:

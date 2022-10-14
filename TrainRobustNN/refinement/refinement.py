@@ -1,5 +1,6 @@
 import torch
-from TrainRobustNN.etc.datasets import load_dataset, abstract_data
+from TrainRobustNN.utils.datasets import load_dataset
+from TrainRobustNN.utils.mapping_func import abstract_data
 from d2l import torch as d2l
 
 
@@ -37,7 +38,7 @@ def refinement(model, model_save_path, batch_size, dataset, interval_num, fnn=Fa
             wul += torch.sum(grad[i*2].clamp(min=0))
             wuu -= torch.sum(grad[i*2].clamp(max=0))
 
-    # 最简单的方法，一泛化就终止
+    # refinement process ends if d tends to be bigger
     if wll > wlu and wul < wuu:
         return False
     return True

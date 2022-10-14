@@ -1,8 +1,8 @@
 from d2l import torch as d2l
 import numpy as np
 import itertools
-from TrainRobustNN.etc import datasets
-from TrainRobustNN.etc import conv_models_define
+from TrainRobustNN.utils import datasets
+from TrainRobustNN.utils import conv_models_define
 import torch
 import os
 import matplotlib
@@ -31,7 +31,7 @@ def generate_boxplot(test_iter, d, flist):
         draw_boxplot(x, f'{id}.png')
 
 
-# 绘制修改前后抽象状态的曲线图、散点图
+# Draw curves and scatterplots of abstract state before and after modification
 def draw_find_tuning_graph(x1, x2, name):
     x_view1 = x1.reshape(2, -1).cpu().detach().numpy()
     new_x_view1 = []
@@ -45,15 +45,15 @@ def draw_find_tuning_graph(x1, x2, name):
     x_view2 = np.array(new_x_view2)
     
     d2l.plot(np.arange(len(x_view1)), [x_view1, x_view2], legend=['origin', 'new'], figsize=(30, 5))
-    d2l.plt.savefig("output/vision_abstract_state/fine_tuning_graph/曲线图"+name)
+    d2l.plt.savefig("output/vision_abstract_state/fine_tuning_graph/curves_"+name)
     d2l.plt.clf()
     d2l.set_figsize((30, 5))
     d2l.plt.scatter(np.arange(len(x_view1)), x_view1, c='b')
     d2l.plt.scatter(np.arange(len(x_view1)), x_view2, c='r')
-    d2l.plt.savefig("output/vision_abstract_state/fine_tuning_graph/散点图"+name)
+    d2l.plt.savefig("output/vision_abstract_state/fine_tuning_graph/scatterplots_"+name)
     d2l.plt.clf()
 
-# 尝试改变抽象状态，看能不能分类成功
+# Try to change the abstract state to see if the classification is successful
 def generate_fine_tuning_graph(test_iter, model, d, id):
     x, y = next(itertools.islice(test_iter, id, None))
     x = datasets.abstract_data(x, 2.0/d)
@@ -67,7 +67,7 @@ def generate_fine_tuning_graph(test_iter, model, d, id):
     y_hat_max = y_hat[0,y_true]
     for h in range(x.shape[2]):
         for w in range(x.shape[3]):
-            # 不考虑背景
+            # Regardless of background
             if x[0][1][h][w] == -1.0:
                 continue
 
@@ -120,7 +120,7 @@ def generate_3d_graph(test_iter, d, flist):
         x = datasets.abstract_data(x, 2.0/d)  # (1, 2, 28, 28)
         rx = np.arange(0, 28, 1)
         ry = np.arange(0, 28, 1)
-        rx, ry = np.meshgrid(rx, ry)  # 网格化
+        rx, ry = np.meshgrid(rx, ry)  # Gridding
         z0, z1 = x[0,0,:,:].detach().numpy(), x[0,1,:,:].detach().numpy()
         z = (z0 + z1) / 2.0
         fig = d2l.plt.figure(figsize=(10,8))

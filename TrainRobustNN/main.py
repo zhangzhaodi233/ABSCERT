@@ -1,10 +1,9 @@
 import os
-import torch
-from TrainRobustNN.train.train_v1 import *
-from TrainRobustNN.refinement.refinement_v1 import refinement
-from TrainRobustNN.etc.utils import get_parameters
-from TrainRobustNN.etc.conv_models_define import *
-from TrainRobustNN.etc.fc_models_define import *
+from TrainRobustNN.train.train import *
+from TrainRobustNN.refinement.refinement import refinement
+from TrainRobustNN.utils.params import get_parameters
+from TrainRobustNN.utils.conv_models_define import *
+from TrainRobustNN.utils.fc_models_define import *
 
 
 
@@ -55,13 +54,13 @@ def main():
     os.makedirs(model_dir, exist_ok=True)
 
     structure = args.structure
-    if structure == 'DM_Small':
+    if structure == 'DM_Small':  # MNIST and CIFAR
         model_struc = DM_Small(in_ch, in_dim)
-    elif structure == 'DM_Medium':
+    elif structure == 'DM_Medium':  # MNIST and CIFAR
         model_struc = DM_Medium(in_ch, in_dim)
-    elif structure == 'DM_Large':
+    elif structure == 'DM_Large':  # MNIST and CIFAR
         model_struc = DM_Large(in_ch, in_dim)
-    elif structure == 'LeNet':  # MNIST和CIFAR
+    elif structure == 'LeNet':  # MNIST and CIFAR
         model_struc = LeNet5(in_ch, in_dim)
     elif structure == 'AlexNet':  # IMAGENET
         model_struc = AlexNet(in_ch)
@@ -92,9 +91,12 @@ def main():
     d_step = args.d_step
     epsilon_list = args.epsilon
     epsilon_list = sorted(epsilon_list, reverse=True)
+    train_version = args.train_version
 
     # get the d list for train and valid
     d_range, d_threshold = generate_d(epsilon_list, d_step)
+    print(f"List of abstract granularity to train: \n{d_range}")
+    printlog(f"List of abstract granularity to train: \n{d_range}", log_path)
 
     record = []
     for i, d in enumerate(d_range):
@@ -104,11 +106,14 @@ def main():
         print("--dataset {}, --model_name {}, --d {:.3f}, --batch_size {}, --epochs {}, --learning_rate {:.5f}".format(dataset, model_name, d, batch_size, epochs, learning_rate))
         printlog("--dataset {}, --model_name {}, --d {:.3f}, --batch_size {}, --epochs {}, --learning_rate {:.5f}".format(dataset, model_name, d, batch_size, epochs, learning_rate), log_path)
         d2l.plt.clf()
+        
+
         test_acc = train(model_struc, dataset, model_path_, log_path, fnn=fnn, interval_num=interval_num, batch_size=batch_size, epochs=epochs, learning_rate=learning_rate,
-                            optimizer=optimizer, weight_decay=weight_decay, momentum=momentum, init=init, lr_scheduler=lr_scheduler)
+                        optimizer=optimizer, weight_decay=weight_decay, momentum=momentum, init=init, lr_scheduler=lr_scheduler)
+
         record.append([d, test_acc])
 
-        # 我们给d的减小一个依据
+        # refinement process
         if not refinement(model_struc, model_path_, batch_size, dataset, interval_num, fnn=fnn):
             break
 

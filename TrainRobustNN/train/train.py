@@ -1,11 +1,12 @@
 import torch
 from torch import nn
-from TrainRobustNN.etc.datasets import load_dataset, abstract_data
+from TrainRobustNN.utils.datasets import load_dataset
+from TrainRobustNN.utils.mapping_func import abstract_data
 import math
 import time
 from transformers import get_cosine_schedule_with_warmup
 from d2l import torch as d2l
-from TrainRobustNN.valid.valid_v1 import valid
+from TrainRobustNN.verify.verify import verify
 
 
 def printlog(s, log_path):
@@ -31,11 +32,6 @@ def train(model, dataset, model_save_path, log_path, fnn=False, interval_num=1, 
 
     train_iter, test_iter = load_dataset(batch_size, dataset)
     last_epoch = -1
-    # 接着之前的模型继续训练
-    # if os.path.exists('exp_results/lenet5_test.pt'):
-    #     checkpoint = torch.load('exp_results/lenet5_test.pt')
-    #     last_epoch = checkpoint['last_epoch']
-    #     model.load_state_dict(checkpoint['model_state_dict'])
 
     len_train_iter = len(train_iter)
     num_training_steps = len_train_iter * epochs
@@ -95,7 +91,7 @@ def train(model, dataset, model_save_path, log_path, fnn=False, interval_num=1, 
         if lr_scheduler == "steplr":
             scheduler.step()
 
-        test_acc = valid(model, dataset, interval_num, test_iter, fnn=fnn, device=device)
+        test_acc = verify(model, dataset, interval_num, test_iter, fnn=fnn, device=device)
         print("### Epochs [{}/{}] -- Acc on test {:.4}".format(epoch + 1, epochs, test_acc))
         printlog("### Epochs [{}/{}] -- Acc on test {:.4}".format(epoch + 1, epochs, test_acc), log_path)
         animator.add(epoch + 1, (None, None, test_acc))

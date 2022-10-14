@@ -1,9 +1,9 @@
 import torch
-from TrainRobustNN.etc.datasets import abstract_data
+from TrainRobustNN.utils.mapping_func import abstract_data
 from d2l import torch as d2l
 
 
-def valid(model, dataset, interval_num, data_iter, fnn=False, device=d2l.try_gpu()):
+def verify(model, dataset, interval_num, data_iter, fnn=False, device=d2l.try_gpu()):
     model.eval()
     with torch.no_grad():
         acc_sum, n = 0.0, 0

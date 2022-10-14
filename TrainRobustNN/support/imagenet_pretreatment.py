@@ -7,7 +7,7 @@ import shutil
 # Parameter val_dir is the image directory of the verification set, 
 # devkit_dir is the directory of the validation set label
 
-def move_valimg(val_dir='./data/ImageNet/valid', devkit_dir='./data/ImageNet/ILSVRC2012_devkit_t12'):
+def move_valimg(val_dir='data/ImageNet/valid', devkit_dir='data/ImageNet/ILSVRC2012_devkit_t12'):
     """
     move valimg to correspongding folders.
     val_id(start from 1) -> ILSVRC_ID(start from 1) -> WIND

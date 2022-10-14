@@ -1,5 +1,5 @@
 import torch
-from TrainRobustNN.etc import conv_models_define
+from TrainRobustNN.utils import conv_models_define
 from d2l import torch as d2l
 import os
 
