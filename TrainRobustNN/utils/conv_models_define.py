@@ -107,9 +107,9 @@ class mlp_4_layer_robust(nn.Module):
         else:
             return logits
         
-class DM_Small(nn.Module):
+class DM_Small_Relu(nn.Module):  # relu
     def __init__(self, in_ch, in_dim, linear_size=100):
-        super(DM_Small, self).__init__()
+        super(DM_Small_Relu, self).__init__()
         self.conv = nn.Sequential(  # [n, in_ch, in_dim, in_dim]
             nn.Conv2d(in_ch, 16, 4, stride=2, padding=2), # in_channels, out_channels, kernel_size
             nn.ReLU(),  # [4*width, ((in_dim-kernel_size+2*padding) // stride) + 1, ((in_dim-kernel_size+2*padding) // stride) + 1]                  
@@ -134,9 +134,63 @@ class DM_Small(nn.Module):
         else:
             return logits
 
-class DM_Medium(nn.Module):
+class DM_Small_Sigmoid(nn.Module):  # sigmoid
+    def __init__(self, in_ch, in_dim, linear_size=100):
+        super(DM_Small_Sigmoid, self).__init__()
+        self.conv = nn.Sequential(  # [n, in_ch, in_dim, in_dim]
+            nn.Conv2d(in_ch, 16, 4, stride=2, padding=2), # in_channels, out_channels, kernel_size
+            nn.Sigmoid(),  # [4*width, ((in_dim-kernel_size+2*padding) // stride) + 1, ((in_dim-kernel_size+2*padding) // stride) + 1]                  
+            nn.Conv2d(16, 32, 4, stride=1, padding=2),        
+            nn.Sigmoid(),
+        )
+
+        self.fc = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(8*4*(in_dim // 2+2)*(in_dim // 2+2),linear_size),
+            nn.Sigmoid(),
+            nn.Linear(linear_size, 10)
+        )
+    
+    def forward(self, img, labels=None):
+        output = self.conv(img)
+        logits = self.fc(output)
+        if labels is not None:
+            loss_fct = nn.CrossEntropyLoss(reduction='mean')
+            loss = loss_fct(logits, labels)
+            return loss, logits
+        else:
+            return logits
+
+class DM_Small_Tanh(nn.Module):  # tanh
+    def __init__(self, in_ch, in_dim, linear_size=100):
+        super(DM_Small_Tanh, self).__init__()
+        self.conv = nn.Sequential(  # [n, in_ch, in_dim, in_dim]
+            nn.Conv2d(in_ch, 16, 4, stride=2, padding=2), # in_channels, out_channels, kernel_size
+            nn.Tanh(),  # [4*width, ((in_dim-kernel_size+2*padding) // stride) + 1, ((in_dim-kernel_size+2*padding) // stride) + 1]                  
+            nn.Conv2d(16, 32, 4, stride=1, padding=2),        
+            nn.Tanh(),
+        )
+
+        self.fc = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(8*4*(in_dim // 2+2)*(in_dim // 2+2),linear_size),
+            nn.Tanh(),
+            nn.Linear(linear_size, 10)
+        )
+    
+    def forward(self, img, labels=None):
+        output = self.conv(img)
+        logits = self.fc(output)
+        if labels is not None:
+            loss_fct = nn.CrossEntropyLoss(reduction='mean')
+            loss = loss_fct(logits, labels)
+            return loss, logits
+        else:
+            return logits
+
+class DM_Medium_Relu(nn.Module):  # relu
     def __init__(self, in_ch, in_dim, linear_size=512):
-        super(DM_Medium, self).__init__()
+        super(DM_Medium_Relu, self).__init__()
         self.conv = nn.Sequential(  # [n, in_ch, in_dim, in_dim]
             nn.Conv2d(in_ch, 32, 3, stride=1, padding=1), # in_channels, out_channels, kernel_size
             nn.ReLU(),                    
@@ -166,10 +220,76 @@ class DM_Medium(nn.Module):
             return loss, logits
         else:
             return logits
-        
-class DM_Large(nn.Module):
+
+class DM_Medium_Sigmoid(nn.Module):  # sigmoid
     def __init__(self, in_ch, in_dim, linear_size=512):
-        super(DM_Large, self).__init__()
+        super(DM_Medium_Sigmoid, self).__init__()
+        self.conv = nn.Sequential(  # [n, in_ch, in_dim, in_dim]
+            nn.Conv2d(in_ch, 32, 3, stride=1, padding=1), # in_channels, out_channels, kernel_size
+            nn.Sigmoid(),                    
+            nn.Conv2d(32, 32, 4, stride=2, padding=2),        
+            nn.Sigmoid(),
+            nn.Conv2d(32, 64, 3, stride=1, padding=1),
+            nn.Sigmoid(),
+            nn.Conv2d(64, 64, 4, stride=2, padding=2),
+            nn.Sigmoid(),
+        )
+
+        self.fc = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(8*8*(in_dim // 4+1)*(in_dim // 4+1), linear_size),
+            nn.Sigmoid(),
+            nn.Linear(linear_size, linear_size),
+            nn.Sigmoid(),
+            nn.Linear(linear_size, 10)
+        )
+    
+    def forward(self, img, labels=None):
+        output = self.conv(img)
+        logits = self.fc(output)
+        if labels is not None:
+            loss_fct = nn.CrossEntropyLoss(reduction='mean')
+            loss = loss_fct(logits, labels)
+            return loss, logits
+        else:
+            return logits
+
+class DM_Medium_Tanh(nn.Module):  # tanh
+    def __init__(self, in_ch, in_dim, linear_size=512):
+        super(DM_Medium_Tanh, self).__init__()
+        self.conv = nn.Sequential(  # [n, in_ch, in_dim, in_dim]
+            nn.Conv2d(in_ch, 32, 3, stride=1, padding=1), # in_channels, out_channels, kernel_size
+            nn.Tanh(),                    
+            nn.Conv2d(32, 32, 4, stride=2, padding=2),        
+            nn.Tanh(),
+            nn.Conv2d(32, 64, 3, stride=1, padding=1),
+            nn.Tanh(),
+            nn.Conv2d(64, 64, 4, stride=2, padding=2),
+            nn.Tanh(),
+        )
+
+        self.fc = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(8*8*(in_dim // 4+1)*(in_dim // 4+1), linear_size),
+            nn.Tanh(),
+            nn.Linear(linear_size, linear_size),
+            nn.Tanh(),
+            nn.Linear(linear_size, 10)
+        )
+    
+    def forward(self, img, labels=None):
+        output = self.conv(img)
+        logits = self.fc(output)
+        if labels is not None:
+            loss_fct = nn.CrossEntropyLoss(reduction='mean')
+            loss = loss_fct(logits, labels)
+            return loss, logits
+        else:
+            return logits
+
+class DM_Large_Relu(nn.Module):  # relu
+    def __init__(self, in_ch, in_dim, linear_size=512):
+        super(DM_Large_Relu, self).__init__()
         self.conv = nn.Sequential(  # [n, in_ch, in_dim, in_dim]
             nn.Conv2d(in_ch, 64, 3, stride=1, padding=1), # in_channels, out_channels, kernel_size
             nn.ReLU(),                    
@@ -200,6 +320,76 @@ class DM_Large(nn.Module):
         else:
             return logits
         
+
+class DM_Large_Sigmoid(nn.Module):  # sigmoid
+    def __init__(self, in_ch, in_dim, linear_size=512):
+        super(DM_Large_Sigmoid, self).__init__()
+        self.conv = nn.Sequential(  # [n, in_ch, in_dim, in_dim]
+            nn.Conv2d(in_ch, 64, 3, stride=1, padding=1), # in_channels, out_channels, kernel_size
+            nn.Sigmoid(),                    
+            nn.Conv2d(64, 64, 3, stride=1, padding=1),        
+            nn.Sigmoid(),
+            nn.Conv2d(64, 128, 3, stride=2, padding=1),
+            nn.Sigmoid(),
+            nn.Conv2d(128, 128, 3, stride=1, padding=1),
+            nn.Sigmoid(),
+            nn.Conv2d(128, 128, 3, stride=1, padding=1),
+            nn.Sigmoid(),
+        )
+
+        self.fc = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear((in_dim//2) * (in_dim//2) * 128, linear_size),
+            nn.Sigmoid(),
+            nn.Linear(linear_size, 10)
+        )
+
+    def forward(self, img, labels=None):
+        output = self.conv(img)
+        logits = self.fc(output)
+        if labels is not None:
+            loss_fct = nn.CrossEntropyLoss(reduction='mean')
+            loss = loss_fct(logits, labels)
+            return loss, logits
+        else:
+            return logits
+
+
+class DM_Large_Tanh(nn.Module):  # tanh
+    def __init__(self, in_ch, in_dim, linear_size=512):
+        super(DM_Large_Tanh, self).__init__()
+        self.conv = nn.Sequential(  # [n, in_ch, in_dim, in_dim]
+            nn.Conv2d(in_ch, 64, 3, stride=1, padding=1), # in_channels, out_channels, kernel_size
+            nn.Tanh(),                    
+            nn.Conv2d(64, 64, 3, stride=1, padding=1),        
+            nn.Tanh(),
+            nn.Conv2d(64, 128, 3, stride=2, padding=1),
+            nn.Tanh(),
+            nn.Conv2d(128, 128, 3, stride=1, padding=1),
+            nn.Tanh(),
+            nn.Conv2d(128, 128, 3, stride=1, padding=1),
+            nn.Tanh(),
+        )
+
+        self.fc = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear((in_dim//2) * (in_dim//2) * 128, linear_size),
+            nn.Tanh(),
+            nn.Linear(linear_size, 10)
+        )
+
+    def forward(self, img, labels=None):
+        output = self.conv(img)
+        logits = self.fc(output)
+        if labels is not None:
+            loss_fct = nn.CrossEntropyLoss(reduction='mean')
+            loss = loss_fct(logits, labels)
+            return loss, logits
+        else:
+            return logits
+
+
+
 
 class AlexNet(nn.Module):
     def __init__(self, in_ch):
@@ -463,6 +653,82 @@ class ResNet50(nn.Module):
         )
     
     def forward(self, x, y=None):  # x: (batch_size, 3, 224, 224)
+        output = self.conv(x)
+        y_hat = self.fc(output)
+        if y is not None:
+            loss = nn.CrossEntropyLoss(reduction='mean')
+            l = loss(y_hat, y)
+            return l, y_hat
+        else:
+            return y_hat
+
+class Inception_block(nn.Module):
+    def __init__(self, in_channels, c1, c2, c3, c4, **kwargs):
+        super().__init__(**kwargs)
+        # path 1, 1*1 convolution layer
+        self.p1_1 = nn.Conv2d(in_channels, c1, kernel_size=1)
+        # path 2, 1*1 + 3*3 convolution layer
+        self.p2_1 = nn.Conv2d(in_channels, c2[0], kernel_size=1)
+        self.p2_2 = nn.Conv2d(c2[0], c2[1], kernel_size=3, padding=1)
+        # path 3, 1*1 + 5*5 convolution layer
+        self.p3_1 = nn.Conv2d(in_channels, c3[0], kernel_size=1)
+        self.p3_2 = nn.Conv2d(c3[0], c3[1], kernel_size=5, padding=2)
+        # path 4, 3*3 maxpool layer + 1*1 convolution layer
+        self.p4_1 = nn.MaxPool2d(kernel_size=3, stride=1, padding=1)
+        self.p4_2 = nn.Conv2d(in_channels, c4, kernel_size=1)
+    
+    def forward(self, x):
+        p1 = F.relu(self.p1_1(x))
+        p2 = F.relu(self.p2_2(F.relu(self.p2_1(x))))
+        p3 = F.relu(self.p3_2(F.relu(self.p3_1(x))))
+        p4 = F.relu(self.p4_2(self.p4_1(x)))
+        return torch.cat((p1, p2, p3, p4), dim=1)
+
+
+class Inception_v1(nn.Module):
+    def __init__(self, in_ch):
+        super().__init__()
+        b1 = nn.Sequential(
+            nn.Conv2d(in_ch, 64, kernel_size=7, stride=2, padding=3),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        )
+        b2 = nn.Sequential(
+            nn.Conv2d(64, 64, kernel_size=1),
+            nn.ReLU(),
+            nn.Conv2d(64, 192, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        )
+        b3 = nn.Sequential(
+            Inception_block(192, 64, (96, 128), (16, 32), 32),
+            Inception_block(256, 128, (128, 192), (32, 96), 64),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        )
+        b4 = nn.Sequential(
+            Inception_block(480, 192, (96, 208), (16, 48), 64),
+            Inception_block(512, 160, (112, 224), (24, 64), 64),
+            Inception_block(512, 128, (128, 256), (24, 64), 64),
+            Inception_block(512, 112, (144, 288), (32, 64), 64),
+            Inception_block(528, 256, (160, 320), (32, 128), 128),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        )
+        b5 = nn.Sequential(
+            Inception_block(832, 256, (160, 320), (32, 128), 128),
+            Inception_block(832, 384, (192, 384), (48, 128), 128),
+            nn.AdaptiveAvgPool2d((1,1))
+        )
+        self.conv = nn.Sequential(
+            b1,b2,b3,b4,b5
+        )
+        self.fc = nn.Sequential(
+            nn.Flatten(),
+            nn.Dropout(0.4),
+            nn.Linear(1024, 1000)
+        )
+    
+
+    def forward(self, x, y=None):  # x(batch_size, 3, 224, 224)
         output = self.conv(x)
         y_hat = self.fc(output)
         if y is not None:

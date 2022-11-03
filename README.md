@@ -1,6 +1,6 @@
 # TrainRobustNN
 
-TrainRobustNN is the official implementation for paper ["Abstraction-based Training Verified Robust Neural Networks"](). In this project, we propose an elegant method to train verifiable robust neural networks through abstracting input images. The experiment shows that our method is much better than other verifiable robust methods in both accuracy and efficiency.
+TrainRobustNN is the official implementation for paper ["Boosting Verified Training for Robust Image Classifications on Abstract Domains"](). In this project, we propose an elegant method to train verifiable robust neural networks through abstracting input images. The experiment shows that our method is much better than other verifiable robust methods in both accuracy and efficiency.
 
 ## Start with the code
 
@@ -55,10 +55,9 @@ We show part of our state-of-art verification results below：
 | CIFAR10      | DM_Small  | 2/255              | 0.064                  |  74.48%   |  3.31   |
 | CIFAR10      | DM_Medium | 2/255              | 0.035                  |  83.60%   |  3.58   |
 | CIFAR10      | DM_Large  | 2/255              | 0.045                  |  86.19%   |  5.29   |
-| ImageNet     | AlexNet   | 2/255              | 0.1                  |  55.04%   |  481.35   |
-| ImageNet     | VGG11     | 2/255              | 0.1                  |  99%   |  10s   |
-| ImageNet     | ResNet18  | 2/255              | 0.1                  |  67.85%   |  208.10   |
-| ImageNet     | ResNet34  | 2/255              | 0.1                  |  99%   |  10s   |
-| ImageNet     | ResNet50  | 2/255              | 0.1                  |  99%   |  10s   |
+| ImageNet     | AlexNet   | 2/255              | 0.016                  |  55.04%   |  508.2   |
+| ImageNet     | VGG11     | 2/255              | 0.016                  |  63.71%   |  2530.3   |
+| ImageNet     | Inception V1  | 2/255              | 0.016                  |  58.33%   |  2183.7   |
+| ImageNet     | ResNet18  | 2/255              | 0.016                  |  67.85%   |  212.6   |
 
 Note that we set η >= 2 · ε for each experiemnt. 

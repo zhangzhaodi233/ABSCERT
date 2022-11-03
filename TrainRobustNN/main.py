@@ -55,11 +55,23 @@ def main():
 
     structure = args.structure
     if structure == 'DM_Small':  # MNIST and CIFAR
-        model_struc = DM_Small(in_ch, in_dim)
+        model_struc = DM_Small_Relu(in_ch, in_dim)
     elif structure == 'DM_Medium':  # MNIST and CIFAR
-        model_struc = DM_Medium(in_ch, in_dim)
+        model_struc = DM_Medium_Relu(in_ch, in_dim)
     elif structure == 'DM_Large':  # MNIST and CIFAR
-        model_struc = DM_Large(in_ch, in_dim)
+        model_struc = DM_Large_Relu(in_ch, in_dim)
+    elif structure == 'DM_Small_Sigmoid':  # MNIST and CIFAR
+        model_struc = DM_Small_Sigmoid(in_ch, in_dim)
+    elif structure == 'DM_Medium_Sigmoid':  # MNIST and CIFAR
+        model_struc = DM_Medium_Sigmoid(in_ch, in_dim)
+    elif structure == 'DM_Large_Sigmoid':  # MNIST and CIFAR
+        model_struc = DM_Large_Sigmoid(in_ch, in_dim)
+    elif structure == 'DM_Small_Tanh':  # MNIST and CIFAR
+        model_struc = DM_Small_Tanh(in_ch, in_dim)
+    elif structure == 'DM_Medium_Tanh':  # MNIST and CIFAR
+        model_struc = DM_Medium_Tanh(in_ch, in_dim)
+    elif structure == 'DM_Large_Tanh':  # MNIST and CIFAR
+        model_struc = DM_Large_Tanh(in_ch, in_dim)
     elif structure == 'LeNet':  # MNIST and CIFAR
         model_struc = LeNet5(in_ch, in_dim)
     elif structure == 'AlexNet':  # IMAGENET
@@ -70,8 +82,20 @@ def main():
         model_struc = ResNet18(in_ch)
     elif structure == 'ResNet34':
         model_struc = ResNet34(in_ch)
+    elif structure == 'Inceptionv1':
+        model_struc = Inception_v1(in_ch)
     elif structure == 'FC3':
-        model_struc = FC3(in_ch, in_dim, 512)
+        model_struc = FC3_Relu(in_ch, in_dim, 512)
+    elif structure == 'FC5':
+        model_struc = FC5_Relu(in_ch, in_dim, 512)
+    elif structure == 'FC3_Sigmoid':
+        model_struc = FC3_Sigmoid(in_ch, in_dim, 512)
+    elif structure == 'FC5_Sigmoid':
+        model_struc = FC5_Sigmoid(in_ch, in_dim, 512)
+    elif structure == 'FC3_Tanh':
+        model_struc = FC3_Tanh(in_ch, in_dim, 512)
+    elif structure == 'FC5_Tanh':
+        model_struc = FC5_Tanh(in_ch, in_dim, 512)
     fnn = args.fnn == 'True'
 
     # parameters of logs
@@ -106,7 +130,7 @@ def main():
         print("--dataset {}, --model_name {}, --d {:.3f}, --batch_size {}, --epochs {}, --learning_rate {:.5f}".format(dataset, model_name, d, batch_size, epochs, learning_rate))
         printlog("--dataset {}, --model_name {}, --d {:.3f}, --batch_size {}, --epochs {}, --learning_rate {:.5f}".format(dataset, model_name, d, batch_size, epochs, learning_rate), log_path)
         d2l.plt.clf()
-        
+
 
         test_acc = train(model_struc, dataset, model_path_, log_path, fnn=fnn, interval_num=interval_num, batch_size=batch_size, epochs=epochs, learning_rate=learning_rate,
                         optimizer=optimizer, weight_decay=weight_decay, momentum=momentum, init=init, lr_scheduler=lr_scheduler)
@@ -114,8 +138,8 @@ def main():
         record.append([d, test_acc])
 
         # refinement process
-        if not refinement(model_struc, model_path_, batch_size, dataset, interval_num, fnn=fnn):
-            break
+        # if not refinement(model_struc, model_path_, batch_size, dataset, interval_num, fnn=fnn):
+        #     break
 
     # print log
     printlog(f"Train result: \n{record}\n\n", log_path)

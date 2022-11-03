@@ -55,6 +55,7 @@ def train(model, dataset, model_save_path, log_path, fnn=False, interval_num=1, 
     model = model.to(device)
     max_test_acc = 0
     time_sum = 0
+    verify_time_sum = 0
     
     for epoch in range(epochs):
         # print current learning rate
@@ -91,7 +92,12 @@ def train(model, dataset, model_save_path, log_path, fnn=False, interval_num=1, 
         if lr_scheduler == "steplr":
             scheduler.step()
 
+        
+        verify_start_time = time.time()
         test_acc = verify(model, dataset, interval_num, test_iter, fnn=fnn, device=device)
+        verify_end_time = time.time()
+        verify_time_sum += verify_end_time - verify_start_time
+        print(f"\n\n{verify_end_time - verify_start_time}\n\n")
         print("### Epochs [{}/{}] -- Acc on test {:.4}".format(epoch + 1, epochs, test_acc))
         printlog("### Epochs [{}/{}] -- Acc on test {:.4}".format(epoch + 1, epochs, test_acc), log_path)
         animator.add(epoch + 1, (None, None, test_acc))
@@ -105,9 +111,11 @@ def train(model, dataset, model_save_path, log_path, fnn=False, interval_num=1, 
                     model_save_path + '.pt')
     print("### max test accuracy: {:.4}".format(max_test_acc))
     print("### error: {:.4}%".format((1 - max_test_acc)*100))
-    print("### time of per epoch: {:.4}".format(time_sum / epoch))
+    print("### time of per epoch: {:.4}".format(time_sum / epochs))
+    print("### average verify time: {:.4}".format(verify_time_sum / epochs))
     printlog("### max test accuracy: {:.4}".format(max_test_acc), log_path)
     printlog("### error: {:.4}%".format((1 - max_test_acc)*100), log_path)
-    printlog("### time of per epoch: {:.4}".format(time_sum / epoch), log_path)
+    printlog("### time of per epoch: {:.4}".format(time_sum / epochs), log_path)
+    printlog("### average verify time: {:.4}".format(verify_time_sum / epochs), log_path)
     d2l.plt.savefig(f'{model_save_path}.png')
     return max_test_acc

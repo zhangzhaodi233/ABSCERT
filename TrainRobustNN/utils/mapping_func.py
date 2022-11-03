@@ -1,7 +1,11 @@
 import torch
 import numpy as np
 
-def abstract_data(x, interval_num):
+def abstract_data(x, interval_num, raw_train=False):
+    if raw_train:
+        x_cp = x.clone()
+        x_result = torch.cat((x, x_cp), dim=1)
+        return x_result
 
     step = (1-(-1))/interval_num
     k = torch.div((x - (-1)), step, rounding_mode='floor')
@@ -17,8 +21,3 @@ def abstract_data(x, interval_num):
 
     x_result = torch.cat((x_upper, x_lower), dim=1)
     return x_result
-
-# def abstract_data(x, interval_num):
-#     x_cp = x.clone()
-#     x_result = torch.cat((x, x_cp), dim=1)
-#     return x_result
