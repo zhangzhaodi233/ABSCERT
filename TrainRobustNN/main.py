@@ -115,7 +115,6 @@ def main():
     d_step = args.d_step
     epsilon_list = args.epsilon
     epsilon_list = sorted(epsilon_list, reverse=True)
-    train_version = args.train_version
 
     # get the d list for train and valid
     d_range, d_threshold = generate_d(epsilon_list, d_step)
@@ -138,8 +137,8 @@ def main():
         record.append([d, test_acc])
 
         # refinement process
-        # if not refinement(model_struc, model_path_, batch_size, dataset, interval_num, fnn=fnn):
-        #     break
+        if not refinement(model_struc, model_path_, batch_size, dataset, interval_num, fnn=fnn):
+            break
 
     # print log
     printlog(f"Train result: \n{record}\n\n", log_path)
