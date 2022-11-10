@@ -16,27 +16,27 @@ def make_dir(filepath):
 
 def generate_d(epsilon_list, d_step=0.01):
     """compute Abstract Granularity d until d < 2 * epsilon"""
-    // epsilon_list 从大到小排序的扰动值，比如 [0.4, 0.3, 0.2, 0.1]
-    // 抽象粒度的取值
+    # epsilon_list 从大到小排序的扰动值，比如 [0.4, 0.3, 0.2, 0.1]
+    # 抽象粒度的取值
     d_list = []  
-    // 抽象粒度阈值的取值。针对每个扰动值，都会存在一个抽象粒度阈值，即2*epsilon，这是为了保证抽象粒度的取值一定要大于等于2*epsilon，为了保证扰动区间最多跨两个抽象区间。
+    # 抽象粒度阈值的取值。针对每个扰动值，都会存在一个抽象粒度阈值，即2*epsilon，这是为了保证抽象粒度的取值一定要大于等于2*epsilon，为了保证扰动区间最多跨两个抽象区间。
     d_threshold = []  
     last_d = 2.0
     e = 0
-    // 从大到小遍历抽象粒度的取值
+    # 从大到小遍历抽象粒度的取值
     for i in range(2, 256, 1):  # divide the input interval to i parts
         d = 2.0 / i
-        // 如果抽象粒度小于 2*epsilon， 那么就将 2*epsilon 加入到 d_list 和 d_threshold 中，并且开始记录下一个扰动值对应的抽象粒度
+        # 如果抽象粒度小于 2*epsilon， 那么就将 2*epsilon 加入到 d_list 和 d_threshold 中，并且开始记录下一个扰动值对应的抽象粒度
         if d < 2 * epsilon_list[e]: 
             real_d_for_epsilon = 2 / int(1 / epsilon_list[e])
             if real_d_for_epsilon not in d_list:
                 d_list.append(real_d_for_epsilon)
             d_threshold.append(real_d_for_epsilon)
             e += 1
-        // 扰动值遍历结束
+        # 扰动值遍历结束
         if e >= len(epsilon_list):
             break
-        // 使得两个抽象粒度相差的大小大于等于 d_step
+        # 使得两个抽象粒度相差的大小大于等于 d_step
         if last_d - d >= d_step:  # avoid too much d
             d_list.append(d)
             last_d = d
