@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='ABSCERT',
-      packages=['ABSCERT'],
+      packages=['TrainRobustNN'],
       version='1.0')
 
 
