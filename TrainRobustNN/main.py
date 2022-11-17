@@ -1,6 +1,6 @@
 import os
 from TrainRobustNN.train.train import *
-from TrainRobustNN.refinement.refinement import refinement
+from TrainRobustNN.tuning.tuning import tuning
 from TrainRobustNN.utils.params import get_parameters
 from TrainRobustNN.utils.conv_models_define import *
 from TrainRobustNN.utils.fc_models_define import *
@@ -143,8 +143,8 @@ def main():
 
         record.append([d, test_acc])
 
-        # refinement process
-        if not refinement(model_struc, model_path_, batch_size, dataset, interval_num, fnn=fnn):
+        # tuning process
+        if not tuning(model_struc, model_path_, batch_size, dataset, interval_num, fnn=fnn):
             break
 
     # print log

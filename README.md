@@ -1,25 +1,67 @@
-# TrainRobustNN
+# ABSCERT
 
-TrainRobustNN is the official implementation for paper ["Boosting Verified Training for Robust Image Classifications on Abstract Domains"](). In this project, we propose an elegant method to train verifiable robust neural networks through abstracting input images. The experiment shows that our method is much better than other verifiable robust methods in both accuracy and efficiency.
+ABSCERT is the official implementation for paper ["Boosting Verified Training for Robust Image Classifications via Abstraction"](). In this project, we propose an elegant method to train verifiable robust neural networks through abstracting input images. The experiment shows that our method is much better than other verifiable robust methods in both accuracy and efficiency.
 
-## Start with the code
+
+## Project Structure
+> Tool's code: 
+> - TrainRobustNN/train/
+> 	- train.py
+> - TrainRobustNN/verify/
+> 	- verify.py
+> - TrainRobustNN/tuning/
+> 	- tuning.py
+> - TrainRobustNN/utils/
+> 	- params.py
+> 	- datasets.py
+> 	- mapping_func.py
+> 	- conv_models_define.py
+> 	- fc_models_define.py
+> - TrainRobustNN/main.py
+
+> Configuration: 
+> - TrainRobustNN/config/
+
+> Reproduce figures in the paper:
+> - TrainRobustNN/support/
+
+> Train and Verify results produced when the code is run: 
+> - TrainRobustNN/output/
+
+> Scripts to install and run:
+> - setup.py
+> - install.sh
+> - TrainRobustNN/run.sh
+
+
+## Install ABSCERT
+
+### Start with the code
 
 All the scripts and code were tested on a workstation running Ubuntu 18.04.
 
 1. Download the code  
 	```
 	git clone https://github.com/zhangzhaodi233/TrainRobustNN
+	cd TrainRobustNN
 	```
-2. Install the following necessary dependencies:  
-	> torch, torchvision, transformers, nvidia-dali, d2l  
-
-	If prefer, you may create a new conda environment by running:
+2. Install the following necessary dependencies by running:  
 
 	```
 	./install.sh
 	```
 
 GPU is indispensiable for training models
+
+### Start from Docker
+
+We also provide the docker image to run:
+1. Download the docker image ***abscert.tar***. 
+2. Load the docker image:
+	> docker load -i abscert.tar
+3. Start a container with the image:
+	> docker run -it abscert:v1 /bin/bash
+
 
 ## Train and Verify
 
@@ -42,6 +84,7 @@ To train and verify model AlexNet on ImageNet with predefined hyper-parameters, 
 
 	python main.py --config imagenet_alexnet.json
 
+Complete commands to train 35 neural networks on 3 datasets is provided in ***"TrainRobustNN/run.sh"***
 
 ## Main Result
 

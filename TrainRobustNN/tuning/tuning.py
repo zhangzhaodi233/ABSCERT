@@ -5,7 +5,7 @@ from d2l import torch as d2l
 
 
 # load the best model, get the gradient for input and decide whether to generalization or refinement
-def refinement(model, model_save_path, batch_size, dataset, interval_num, fnn=False, device=d2l.try_gpu()):
+def tuning(model, model_save_path, batch_size, dataset, interval_num, fnn=False, device=d2l.try_gpu()):
     model.load_state_dict(torch.load(model_save_path+'.pt')['model_state_dict'])
     train_iter, _ = load_dataset(batch_size, dataset)
     model = model.to(device)
@@ -38,7 +38,7 @@ def refinement(model, model_save_path, batch_size, dataset, interval_num, fnn=Fa
             wul += torch.sum(grad[i*2].clamp(min=0))
             wuu -= torch.sum(grad[i*2].clamp(max=0))
 
-    # refinement process ends if d tends to be bigger
+    # tuning process ends if d tends to be bigger
     if wll > wlu and wul < wuu:
         return False
     return True
