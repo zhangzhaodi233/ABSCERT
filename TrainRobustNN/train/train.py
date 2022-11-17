@@ -97,7 +97,6 @@ def train(model, dataset, model_save_path, log_path, fnn=False, interval_num=1, 
         test_acc = verify(model, dataset, interval_num, test_iter, fnn=fnn, device=device)
         verify_end_time = time.time()
         verify_time_sum += verify_end_time - verify_start_time
-        print(f"\n\n{verify_end_time - verify_start_time}\n\n")
         print("### Epochs [{}/{}] -- Acc on test {:.4}".format(epoch + 1, epochs, test_acc))
         printlog("### Epochs [{}/{}] -- Acc on test {:.4}".format(epoch + 1, epochs, test_acc), log_path)
         animator.add(epoch + 1, (None, None, test_acc))
