@@ -36,57 +36,50 @@ ABSCERT is the official implementation for paper ["Boosting Verified Training fo
 
 ## Install ABSCERT
 
-### Start with the code
+### Start from docker
 
-All the scripts and code were tested on a workstation running Ubuntu 18.04.
-
-1. Download the code  
-	```
-	git clone https://github.com/zhangzhaodi233/TrainRobustNN
-	cd TrainRobustNN
-	```
-2. Install the following necessary dependencies by running:  
-
-	```
-	./install.sh
-	```
-
-GPU is indispensiable for training models
-
-### Start from Docker
-
-We also provide the docker image to run:
-1. Download the docker image ***abscert.tar***. 
+We provide a docker image to run:
+1. Download the docker image ***abscert.tar*** from [https://figshare.com/articles/software/abscert_tar/21571533](https://figshare.com/articles/software/abscert_tar/21571533). 
 2. Load the docker image:
-	> docker load -i abscert.tar
+	
+		docker load -i abscert.tar
 3. Start a container with the image:
-	> docker run -it abscert:v1 /bin/bash
+	
+		docker run -it abscert:v1 /bin/bash
+4. Navigate to the project directory
+
+		cd /root/ABSCERT-main/TrainRobustNN
 
 
-## Train and Verify
 
-We implement a method of training while verifying. 
+## Run ABSCERT and reproduce the results
 
-The project is tested on Python 3.9.12 and Pytorch 1.12.1.
+1. Activate the virtual environment:
+		
+		conda activate abscert
 
-We provide example training hyper-parameters with json format under the **config** directory. You can also apply different hyper-parameters to train the verifiable robust neural network.
+2. Reproduce the result: 
 
-To train and verify model DM_Small on MNIST with predefined hyper-parameters, run:
+	We provide example training hyper-parameters with json format under the **config** directory. You can also apply different hyper-parameters to train the verifiable robust neural network.
 
-	python main.py --config mnist_dm_small.json
+	To train and verify model DM_Small on MNIST with predefined hyper-parameters, run:
 
-To train and verify model DM_Small on CIFAR with predefined hyper-parameters, run:
+		python main.py --config mnist_dm_small.json
 
-	python main.py --config cifar_dm_small.json
+	To train and verify model DM_Small on CIFAR with predefined hyper-parameters, run:
 
-To train and verify model on ImageNet, you need to download the Imagenet dataset first. After that, put the training set to **"./data/ImageNet/train"** and put the verification set to **"./data/ImageNet/valid"**. Note that you need to reform the verification set just like the training set.   
-To train and verify model AlexNet on ImageNet with predefined hyper-parameters, run:
+		python main.py --config cifar_dm_small.json
 
-	python main.py --config imagenet_alexnet.json
+	To train and verify model on ImageNet, you need to download the Imagenet dataset first(As the ImageNet training dataset is more than 130G, we don't provide it). After that, put the training set to **"./data/ImageNet/train"** and put the verification set to **"./data/ImageNet/valid"**. Note that you need to reform the verification set just like the training set.   
+	To train and verify model AlexNet on ImageNet with predefined hyper-parameters, run:
 
-Complete commands to train 35 neural networks on 3 datasets is provided in ***"TrainRobustNN/run.sh"***
+		python main.py --config imagenet_alexnet.json
 
-## Main Result
+	Complete commands to train 35 neural networks on 3 datasets is provided in **"run.sh"**
+
+3. The trained models will be saved in **./output/models/**. The log during training and verification will be saved in **./output/log/**.
+
+## Experiment
 
 We show part of our state-of-art verification results below：
 
